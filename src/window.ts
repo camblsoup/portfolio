@@ -169,7 +169,7 @@ export class Window extends LitElement
         .content {
             width: 100%;
             flex-grow: 1;
-            overflow: scroll;
+            overflow: auto;
         }
         .bottom-bar {
             display: flex;
