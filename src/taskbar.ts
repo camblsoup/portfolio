@@ -30,7 +30,6 @@ export class Taskbar extends LitElement
 
     render() 
     {
-        console.log("Test");
         return html`
         <div class="taskbar">
             <div class="home">
