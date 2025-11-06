@@ -1,7 +1,7 @@
 import { css, html, LitElement, type CSSResultGroup } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import type { appInfo } from "../apps-t/applist";
-import { applist } from "../apps-t/applist";
+import type { appInfo } from "../apps/applist";
+import { applist } from "../apps/applist";
 
 @customElement("taskbar-item")
 export class TaskbarItem extends LitElement 
