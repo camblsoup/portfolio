@@ -10,7 +10,7 @@ export class Taskbar extends LitElement
         minute: "2-digit",
     });
     @state() private pinnedApps: number[] = [];
-    @state() private openApps: number[] = [];
+    // @state() private openApps: number[] = [];
 
     private intervalId: number | undefined;
 
@@ -47,26 +47,26 @@ export class Taskbar extends LitElement
         }
     }
 
-    private pinApp(appId: number) 
-    {
-        if (this.pinnedApps.includes(appId)) return;
-        this.pinnedApps = [...this.pinnedApps, appId];
-        localStorage.setItem(
-            "pinned-apps",
-            JSON.stringify([...this.pinnedApps]),
-        );
-    }
+    // private pinApp(appId: number)
+    // {
+    //     if (this.pinnedApps.includes(appId)) return;
+    //     this.pinnedApps = [...this.pinnedApps, appId];
+    //     localStorage.setItem(
+    //         "pinned-apps",
+    //         JSON.stringify([...this.pinnedApps]),
+    //     );
+    // }
 
-    private unPinApp(appId: number) 
-    {
-        this.pinnedApps = [
-            ...this.pinnedApps.filter((storedId) => storedId !== appId),
-        ];
-        localStorage.setItem(
-            "pinned-apps",
-            JSON.stringify([...this.pinnedApps]),
-        );
-    }
+    // private unPinApp(appId: number)
+    // {
+    //     this.pinnedApps = [
+    //         ...this.pinnedApps.filter((storedId) => storedId !== appId),
+    //     ];
+    //     localStorage.setItem(
+    //         "pinned-apps",
+    //         JSON.stringify([...this.pinnedApps]),
+    //     );
+    // }
 
     render() 
     {
