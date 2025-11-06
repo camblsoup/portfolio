@@ -9,7 +9,7 @@ export interface appInfo {
     y?: number;
 }
 
-const iconFolder = "https://yourusername.github.io/portfolio/assets/app-icons/";
+const iconFolder = "https://camblsoup.github.io/portfolio/assets/app-icons/";
 
 export const applist: Array<appInfo> = [
     {
