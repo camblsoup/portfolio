@@ -1,15 +1,19 @@
 import "./wip";
 
-interface appInfo {
-	name: string,
-	width?: number,
-	height?: number,
-	x?: number,
-	y?: number
+export interface appInfo {
+    icon: string;
+    name: string;
+    width?: number;
+    height?: number;
+    x?: number;
+    y?: number;
 }
+
+const iconFolder = "https://yourusername.github.io/portfolio/assets/app-icons/";
 
 export const applist: Array<appInfo> = [
     {
         name: "wip",
-    }
+        icon: iconFolder + "notes.svg",
+    },
 ];

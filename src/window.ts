@@ -1,13 +1,15 @@
 import { css, html, LitElement, type CSSResultGroup } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { applist } from "./Apps/applist";
+import { applist } from "./apps/applist";
 
 @customElement("window-element")
 export class Window extends LitElement 
 {
-    @property({type: Number, reflect: true}) appId: number | undefined;
-    @property({type: Number, reflect: true}) width: number = 250;
-    @property({type: Number, reflect: true}) height: number = 250;
+    @property({ type: String, reflect: true }) windowId!: string;
+    @property({ type: Number, reflect: true }) appId: number | undefined;
+    @property({ type: Number, reflect: true }) zIndex!: number;
+    @property({ type: Number, reflect: true }) width: number = 250;
+    @property({ type: Number, reflect: true }) height: number = 250;
 
     @state() private x = window.innerWidth / 2 - 250 / 2;
     @state() private y = window.innerHeight / 2 - 250 / 2 - 36;
@@ -19,16 +21,22 @@ export class Window extends LitElement
     connectedCallback(): void 
     {
         super.connectedCallback();
+
+        if (!this.windowId || typeof this.zIndex !== "number")
+            throw new Error("Invalid props");
+
         window.addEventListener("return-to-view", this.handleReturnToView);
+        window.addEventListener("close-window", this.handleCloseWindow);
     }
 
     disconnectedCallback(): void 
     {
         super.disconnectedCallback();
         window.removeEventListener("return-to-view", this.handleReturnToView);
+        window.removeEventListener("close-window", this.handleCloseWindow);
     }
 
-    private initMoveWindow(event: MouseEvent)
+    private initMoveWindow(event: MouseEvent) 
     {
         this.isDragging = true;
         this.offsetX = event.clientX - this.x;
@@ -50,11 +58,23 @@ export class Window extends LitElement
     {
         if (!this.isDragging) return;
 
-        this.x = Math.max(0, Math.min(event.clientX - this.offsetX, window.innerWidth - this.width ));
-        this.y = Math.max(0, Math.min(event.clientY - this.offsetY, window.innerHeight - 20 - 36));
+        this.x = Math.max(
+            0,
+            Math.min(
+                event.clientX - this.offsetX,
+                window.innerWidth - this.width,
+            ),
+        );
+        this.y = Math.max(
+            0,
+            Math.min(
+                event.clientY - this.offsetY,
+                window.innerHeight - 20 - 36,
+            ),
+        );
     };
 
-    private initResizeWindow(event: MouseEvent)
+    private initResizeWindow(event: MouseEvent) 
     {
         this.isDragging = true;
         this.offsetX = event.clientX - this.width - this.x;
@@ -64,7 +84,7 @@ export class Window extends LitElement
         window.addEventListener("mousemove", this.resizeWindow);
     }
 
-    private cleanupResizeWindow = () =>
+    private cleanupResizeWindow = () => 
     {
         this.isDragging = false;
 
@@ -72,31 +92,55 @@ export class Window extends LitElement
         window.removeEventListener("mousemove", this.resizeWindow);
     };
 
-    private resizeWindow = (event: MouseEvent) =>
+    private resizeWindow = (event: MouseEvent) => 
     {
         if (!this.isDragging) return;
 
-        this.width = Math.max(0, Math.min(event.clientX - this.x - this.offsetX, window.innerWidth - this.x));
-        this.height = Math.max(0, Math.min(event.clientY - this.y - this.offsetY, window.innerHeight - this.y - 36));
+        this.width = Math.max(
+            0,
+            Math.min(
+                event.clientX - this.x - this.offsetX,
+                window.innerWidth - this.x,
+            ),
+        );
+        this.height = Math.max(
+            0,
+            Math.min(
+                event.clientY - this.y - this.offsetY,
+                window.innerHeight - this.y - 36,
+            ),
+        );
     };
 
-    private handleReturnToView  (event: Event) 
+    private handleReturnToView(event: Event) 
     {
-        const detail = (event as CustomEvent<{ id?: string }>).detail;
-        if (detail?.id !== this.id) return;
-        this.returnToView();
+        const detail = (event as CustomEvent<{ windowId?: string }>).detail;
+        if (detail?.windowId === this.windowId) this.returnToView();
     }
 
     private returnToView() 
     {
-        this.x = Math.max(0, Math.min(this.x, window.innerWidth - this.width ));
+        this.x = Math.max(0, Math.min(this.x, window.innerWidth - this.width));
         this.y = Math.max(0, Math.min(this.y, window.innerHeight - 20 - 36));
     }
 
-    private closeWindow()
+    private handleCloseWindow(event: Event) 
+    {
+        const detail = (event as CustomEvent<{ windowId?: string }>).detail;
+        if (detail?.windowId === this.windowId) this.closeWindow();
+    }
+
+    private closeWindow() 
     {
         this.remove();
     }
+
+    private focusWindow = () => 
+    {
+        this.dispatchEvent(
+            new CustomEvent("focus-window", { bubbles: true, composed: true }),
+        );
+    };
 
     private renderApp() 
     {
@@ -107,33 +151,36 @@ export class Window extends LitElement
         this.y = appInfo.y ?? this.y;
 
         const appElement = customElements.get(`${appInfo.name ?? "wip"}-app`);
-        return appElement ? html`${new appElement}` : html`<p style="padding: 2px;">App not found</p>`;
+        return appElement
+            ? html`${new appElement()}`
+            : html`<p style="padding: 2px;">App not found</p>`;
     }
 
     render() 
     {
         return html`
-            <div class="window" style="--x: ${this.x}px; --y: ${this.y}px; --width: ${this.width}px; --height: ${this.height}px;">
+            <div
+                class="window"
+                style="--x: ${this.x}px; --y: ${this.y}px; --width: ${this
+    .width}px; --height: ${this.height}px; --z-index: ${this
+    .zIndex};"
+                @pointerdown=${this.focusWindow}
+            >
                 <div class="top-bar" @mousedown=${this.initMoveWindow}>
-                    <div class="title">
-
-                    </div>
+                    <div class="title"></div>
                     <div class="controls">
                         <button class="close" @click=${this.closeWindow}>
                             <img />
                         </button>
                     </div>
                 </div>
-                <div class="content">
-                    ${this.renderApp()}
-                </div>
+                <div class="content">${this.renderApp()}</div>
                 <div class="bottom-bar">
-                    <div class="info">
-
-                    </div>
-                    <div class="resize-window" @mousedown=${this.initResizeWindow}>
-
-                    </div>
+                    <div class="info"></div>
+                    <div
+                        class="resize-window"
+                        @mousedown=${this.initResizeWindow}
+                    ></div>
                 </div>
             </div>
         `;
@@ -151,6 +198,8 @@ export class Window extends LitElement
             min-width: 100px;
             min-height: 100px;
             border: 1px solid black;
+            z-index: var(--z-index, 0);
+            background-color: #fffeaa;
         }
         .top-bar {
             box-sizing: border-box;
@@ -164,7 +213,7 @@ export class Window extends LitElement
         }
         .top-bar .title {
             flex-grow: 1;
-            height: 100%
+            height: 100%;
         }
         .content {
             width: 100%;
@@ -213,6 +262,6 @@ export class Window extends LitElement
 
 declare global {
     interface HTMLElementTagNameMap {
-        'window-element': Window
+        "window-element": Window;
     }
 }
