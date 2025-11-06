@@ -1,6 +1,6 @@
 import { css, html, LitElement, type CSSResultGroup } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { applist } from "./apps/applist";
+import { applist } from "./apps-t/applist";
 
 @customElement("window-element")
 export class Window extends LitElement 
