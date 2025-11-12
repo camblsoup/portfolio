@@ -12,8 +12,7 @@ export class Desktop extends LitElement
     connectedCallback(): void 
     {
         super.connectedCallback();
-        this.openApp(0);
-        this.openApp(0);
+        this.openApp(1);
 
         localStorage.setItem("pinned-apps", JSON.stringify([0]));
 

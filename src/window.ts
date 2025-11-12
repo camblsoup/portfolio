@@ -10,6 +10,7 @@ export class Window extends LitElement
     @property({ type: Number, reflect: true }) zIndex!: number;
     @property({ type: Number, reflect: true }) width: number = 250;
     @property({ type: Number, reflect: true }) height: number = 250;
+    @property({ type: Boolean, reflect: true }) resizeable: boolean = true;
 
     @state() private x = window.innerWidth / 2 - 250 / 2;
     @state() private y = window.innerHeight / 2 - 250 / 2 - 36;

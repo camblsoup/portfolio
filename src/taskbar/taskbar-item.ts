@@ -17,7 +17,7 @@ export class TaskbarItem extends LitElement
     {
         return html`
             <div class="taskbar-container">
-                <img src=${this.appInfo.icon} />
+                <img class="app-icon" src=${this.appInfo.icon} />
                 ${this.appInfo.name}
             </div>
         `;
@@ -25,8 +25,16 @@ export class TaskbarItem extends LitElement
 
     static styles?: CSSResultGroup | undefined = css`
         .taskbar-container {
-            max-width: 120px;
-            width: 100%;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            height: 100%;
+            gap: 2px;
+        }
+
+        .app-icon {
+            width: 24px;
+            height: 24px;
         }
     `;
 }
