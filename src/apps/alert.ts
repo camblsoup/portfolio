@@ -33,7 +33,7 @@ export class Alert extends AppElement
         return html`
             <div>
                 <img
-                    src="https://camblsoup.github.io/portfolio/assets/alert-icons/${this.alertIcon()}"
+                    src="https://camblsoup.github.io/portfolio/assets/alert-icons/${this.alertIcon()}.webp"
                 />
                 <p>${this.message}</p>
             </div>
