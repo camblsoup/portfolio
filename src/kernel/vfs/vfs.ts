@@ -24,7 +24,7 @@ export const vfs = {
   },
 
   async writeFile(path: string, content: VFSContent) {
-    VFSNodeSchema.parse(content);
+    VFSContentSchema.parse(content);
 
     const { parentId, nodeName, existingId } = await prepareNodeContext(path);
     const contentSize = content.byteLength;
