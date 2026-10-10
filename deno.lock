@@ -1696,6 +1696,7 @@
       "jsr:@std/expect@^1.0.19",
       "jsr:@std/testing@^1.0.19",
       "npm:@ark-ui/solid@^5.37.1",
+      "npm:@inlang/cli@3",
       "npm:@inlang/paraglide-js@^2.20.2",
       "npm:fake-indexeddb@^6.2.5",
       "npm:idb@^8.0.3",
