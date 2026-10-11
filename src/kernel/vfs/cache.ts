@@ -1,116 +1,113 @@
 import { VFSNode } from "./structure.ts";
 
-export class ContentCache {
-  // Key: file ID, Value: Uint8Array data payload
-  private cache = new Map<string, Uint8Array>();
-  private currentByteSize = 0;
+const DEFAULT_MAX_BYTE_SIZE = 50 * 1024 * 1024;
+const contentEntries = new Map<string, Uint8Array>();
+let currentByteSize = 0;
 
-  constructor(private maxByteSize: number = 50 * 1024 * 1024) {} // Default: 50MB limit
-
-  public get(id: string): Uint8Array | undefined {
-    const data = this.cache.get(id);
+export const contentCache = {
+  get(id: string): Uint8Array | undefined {
+    const data = contentEntries.get(id);
     if (!data) return undefined;
 
     // Refresh LRU order: remove and re-append to make it "Most Recently Used"
-    this.cache.delete(id);
-    this.cache.set(id, data);
+    contentEntries.delete(id);
+    contentEntries.set(id, data);
     return data;
-  }
+  },
 
-  public set(id: string, data: Uint8Array): void {
-    // If the path already exists, subtract its old size before overwriting
-    if (this.cache.has(id)) {
-      this.currentByteSize -= this.cache.get(id)!.byteLength;
-      this.cache.delete(id);
+  set(id: string, data: Uint8Array): void {
+    if (data.byteLength > DEFAULT_MAX_BYTE_SIZE) {
+      return;
     }
 
-    // Check if a single file is completely over the maximum allowed size limit
-    if (data.byteLength > this.maxByteSize) {
-      return; // Do not cache files larger than the entire cache pool
+    // If the path already exists, subtract its old size before overwriting
+    if (contentEntries.has(id)) {
+      currentByteSize -= contentEntries.get(id)!.byteLength;
+      contentEntries.delete(id);
     }
 
     // Evict old entries until we have enough headroom for the new payload
     while (
-      this.currentByteSize + data.byteLength > this.maxByteSize &&
-      this.cache.size > 0
+      currentByteSize + data.byteLength > DEFAULT_MAX_BYTE_SIZE &&
+      contentEntries.size > 0
     ) {
       // The first item in the map iterator is the oldest/least recently used
-      const oldestKey = this.cache.keys().next().value;
+      const oldestKey = contentEntries.keys().next().value;
       if (oldestKey !== undefined) {
-        const oldestData = this.cache.get(oldestKey);
+        const oldestData = contentEntries.get(oldestKey);
         if (oldestData) {
-          this.currentByteSize -= oldestData.byteLength;
+          currentByteSize -= oldestData.byteLength;
         }
-        this.cache.delete(oldestKey);
+        contentEntries.delete(oldestKey);
       }
     }
 
     // Commit to cache storage space allocation
-    this.cache.set(id, data);
-    this.currentByteSize += data.byteLength;
-  }
+    contentEntries.set(id, data);
+    currentByteSize += data.byteLength;
+  },
 
-  public has(id: string): boolean {
-    return this.cache.has(id);
-  }
+  has(id: string): boolean {
+    return contentEntries.has(id);
+  },
 
-  public delete(id: string): void {
-    const data = this.cache.get(id);
+  delete(id: string): void {
+    const data = contentEntries.get(id);
     if (data) {
-      this.currentByteSize -= data.byteLength;
-      this.cache.delete(id);
+      currentByteSize -= data.byteLength;
+      contentEntries.delete(id);
     }
-  }
+  },
 
-  public clear(): void {
-    this.cache.clear();
-    this.currentByteSize = 0;
-  }
+  clear(): void {
+    contentEntries.clear();
+    currentByteSize = 0;
+  },
 
   // Debug methods for profiling/testing performance bounds
-  public get sizeInBytes(): number {
-    return this.currentByteSize;
-  }
-  public get entryCount(): number {
-    return this.cache.size;
-  }
-}
+  get sizeInBytes(): number {
+    return currentByteSize;
+  },
+  get entryCount(): number {
+    return contentEntries.size;
+  },
+};
 
 export type InodeUpdater = (
   currentNode: VFSNode | undefined,
 ) => VFSNode | undefined;
 
-export class InodeCache {
-  private cache = new Map<string, VFSNode>();
+const inodeEntries = new Map<string, VFSNode>();
 
-  public get(id: string): VFSNode | undefined {
-    return this.cache.get(id);
-  }
+export const inodeCache = {
+  get(id: string): VFSNode | undefined {
+    return inodeEntries.get(id);
+  },
 
-  public set(id: string, valueOrFn: VFSNode | InodeUpdater): void {
+  set(id: string, valueOrFn: VFSNode | InodeUpdater): void {
     if (typeof valueOrFn === "function") {
-      const current = this.cache.get(id);
+      const current = inodeEntries.get(id);
       const next = valueOrFn(current);
 
       if (next === undefined) {
-        this.cache.delete(id);
+        inodeEntries.delete(id);
       } else {
-        this.cache.set(id, next);
+        inodeEntries.set(id, next);
       }
     } else {
-      this.cache.set(id, valueOrFn);
+      inodeEntries.set(id, valueOrFn);
     }
-  }
+  },
 
-  public has(id: string): boolean {
-    return this.cache.has(id);
-  }
+  has(id: string): boolean {
+    return inodeEntries.has(id);
+  },
 
-  public delete(id: string): boolean {
-    return this.cache.delete(id);
-  }
+  delete(id: string): boolean {
+    return inodeEntries.delete(id);
+  },
 
-  public clear(): void {
-    this.cache.clear();
-  }
-}
+  clear(): void {
+    inodeEntries.clear();
+  },
+};

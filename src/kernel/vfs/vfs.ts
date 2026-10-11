@@ -10,7 +10,7 @@ import {
   VFSNodeSchema,
   VFSNodeType,
 } from "./structure.ts";
-import { ContentCache, InodeCache } from "./cache.ts";
+import { contentCache, inodeCache } from "./cache.ts";
 
 export const vfs = {
   async readMetadata(path: string) {
@@ -49,11 +49,11 @@ export const vfs = {
     }
 
     // Optimistic UI updates
-    state.inodes.set(node.id, node);
-    state.contentCache.set(node.id, content);
+    inodeCache.set(node.id, node);
+    contentCache.set(node.id, content);
 
     if (!existingId) {
-      state.inodes.set(parentId, (parent) => {
+      inodeCache.set(parentId, (parent) => {
         if (!parent || parent.nodeType !== VFSNodeType.DIRECTORY) return parent;
         return {
           ...parent,
@@ -67,7 +67,7 @@ export const vfs = {
 
     // Storage Persistence
     try {
-      const updatedParent = state.inodes.get(parentId);
+      const updatedParent = inodeCache.get(parentId);
 
       const db = await dbSingleton;
       const tx = db.transaction(["inodes", "content"], "readwrite");
@@ -117,8 +117,8 @@ export const vfs = {
     };
 
     // Optimistic UI Updates
-    state.inodes.set(node.id, node);
-    state.inodes.set(parentId, (parent) => {
+    inodeCache.set(node.id, node);
+    inodeCache.set(parentId, (parent) => {
       if (!parent || parent.nodeType !== VFSNodeType.DIRECTORY) return parent;
       return {
         ...parent,
@@ -131,7 +131,7 @@ export const vfs = {
 
     // Storage Persistence
     try {
-      const updatedParent = state.inodes.get(parentId);
+      const updatedParent = inodeCache.get(parentId);
 
       const db = await dbSingleton;
       const tx = db.transaction(["inodes"], "readwrite");
@@ -162,11 +162,11 @@ export const vfs = {
 
     if (!node) return;
 
-    state.inodes.delete(node.id);
-    state.contentCache.delete(node.id);
+    inodeCache.delete(node.id);
+    contentCache.delete(node.id);
 
     if (node.parentId) {
-      state.inodes.set(
+      inodeCache.set(
         node.parentId,
         (parentNode) => {
           if (!parentNode || parentNode.nodeType !== VFSNodeType.DIRECTORY) {
@@ -193,7 +193,7 @@ export const vfs = {
       tx.objectStore("content").delete(node.id);
 
       if (node.parentId) {
-        const parentNode = state.inodes.get(node.parentId);
+        const parentNode = inodeCache.get(node.parentId);
         if (!parentNode || parentNode.nodeType !== VFSNodeType.DIRECTORY) {
           throw new Error("Cannot set parentId to a non directory node");
         }
@@ -243,18 +243,6 @@ export const vfs = {
 const DB_NAME = "VFS";
 const DB_VERSION = 1;
 
-class VFSState {
-  public inodes = new InodeCache();
-  public contentCache = new ContentCache(50 * 1024 * 1024);
-
-  public clear(): void {
-    this.inodes.clear();
-    this.contentCache.clear();
-  }
-}
-
-const state = new VFSState();
-
 const dbSingleton = openDB(DB_NAME, DB_VERSION, {
   upgrade(db) {
     db.createObjectStore("inodes");
@@ -269,7 +257,7 @@ async function resolvePathToId(path: string): Promise<string> {
   if (path === "/" || path === "") return "root";
 
   for (const part of parts) {
-    let currNode = state.inodes.get(currId);
+    let currNode = inodeCache.get(currId);
 
     if (!currNode) {
       currNode = await loadMetadata(currId).catch(() => {
@@ -299,8 +287,8 @@ async function resolvePathToId(path: string): Promise<string> {
 }
 
 async function loadMetadata(id: string, options?: { forceRefresh: boolean }) {
-  if (state.inodes.has(id) && !options?.forceRefresh) {
-    return state.inodes.get(id)!;
+  if (inodeCache.has(id) && !options?.forceRefresh) {
+    return inodeCache.get(id)!;
   }
 
   const db = await dbSingleton;
@@ -317,13 +305,13 @@ async function loadMetadata(id: string, options?: { forceRefresh: boolean }) {
     throw new Error("File system corruption detected.");
   }
 
-  state.inodes.set(id, validNode.data);
+  inodeCache.set(id, validNode.data);
   return validNode.data;
 }
 
 async function loadContent(id: string, options?: { forceRefresh: boolean }) {
-  if (state.contentCache.has(id) && !options?.forceRefresh) {
-    return state.contentCache.get(id)!;
+  if (contentCache.has(id) && !options?.forceRefresh) {
+    return contentCache.get(id)!;
   }
 
   const db = await dbSingleton;
@@ -339,7 +327,7 @@ async function loadContent(id: string, options?: { forceRefresh: boolean }) {
     throw new Error("File system corruption detected.");
   }
 
-  state.contentCache.set(id, validContent.data);
+  contentCache.set(id, validContent.data);
   return validContent.data;
 }
 
