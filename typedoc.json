@@ -1,0 +1,14 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "myOS API",
+  "entryPoints": ["src/kernel/**/*.ts"],
+  "entryPointStrategy": "expand",
+  "exclude": ["**/*.test.ts"],
+  "excludeInternal": true,
+  "excludePrivate": true,
+  "out": "docs/api",
+  "plugin": ["typedoc-plugin-markdown"],
+  "skipErrorChecking": true,
+  "sort": "source-order",
+  "tsconfig": "typedoc.tsconfig.json"
+}

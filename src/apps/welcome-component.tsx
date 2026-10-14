@@ -3,6 +3,7 @@ import { createSignal } from "solid-js";
 
 export { WelcomeApp };
 
+/** Renders the default welcome application and its click counter. */
 function WelcomeApp() {
   const [clickCount, setClickCount] = createSignal<number>(0);
 

@@ -5,7 +5,8 @@
     "dev": "deno task i18n:compile && deno run -A npm:vite",
     "build": "deno task i18n:compile && deno run -A npm:vite build",
     "preview": "deno task i18n:compile && deno run -A npm:vite preview",
-    "test": "deno test --allow-net --allow-read --allow-write"
+    "test": "deno test --allow-net --allow-read --allow-write",
+    "docs": "deno run -A npm:typedoc"
   },
   "imports": {
     "@ark-ui/solid": "npm:@ark-ui/solid@^5.37.1",

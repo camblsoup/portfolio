@@ -13,16 +13,19 @@ import {
 import { contentCache, inodeCache } from "./cache.ts";
 
 export const vfs = {
+  /** Reads metadata for the node at an absolute VFS path. */
   async readMetadata(path: string) {
     const id = await resolvePathToId(path);
     return await loadMetadata(id);
   },
 
+  /** Reads binary content for a file at an absolute VFS path. */
   async readContent(path: string) {
     const id = await resolvePathToId(path);
     return await loadContent(id);
   },
 
+  /** Creates or overwrites a file and persists its content. */
   async writeFile(path: string, content: VFSContent) {
     VFSContentSchema.parse(content);
 
@@ -92,6 +95,7 @@ export const vfs = {
     }
   },
 
+  /** Creates an empty directory at an absolute VFS path. */
   async createDirectory(path: string): Promise<VFSNode> {
     const normalizedInput = path.endsWith("/") && path !== "/"
       ? path.slice(0, -1)
@@ -154,6 +158,7 @@ export const vfs = {
     }
   },
 
+  /** Deletes a file or directory entry at an absolute VFS path. */
   async delete(path: string) {
     const id = await resolvePathToId(path);
     if (!id) return null;
@@ -227,6 +232,7 @@ export const vfs = {
     }
   },
 
+  /** Warms the metadata and content caches for an existing path. */
   async preLoad(path: string) {
     const id = await resolvePathToId(path);
     if (id) {

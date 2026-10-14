@@ -1,21 +1,25 @@
 import { Component } from "solid-js";
 
+/** Defines the menu item exposed by an application. */
 export interface ChromeMenuItem {
   label: string;
   disabled?: boolean;
   onClick: () => void;
 }
 
+/** Groups application menu items under a category label. */
 export interface ChromeMenuCategory {
   label: string;
   items: ChromeMenuItem[];
 }
 
+/** Provides the application with its process identity and menu registration hook. */
 export interface AppBridge {
   pid: number;
   setMenus: (menus: ChromeMenuCategory[]) => void;
 }
 
+/** Describes an application available to the desktop environment. */
 export interface AppManifest {
   id: string;
   name: string;

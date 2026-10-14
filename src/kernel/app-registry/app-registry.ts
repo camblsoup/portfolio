@@ -1,6 +1,7 @@
 import { WelcomeApp } from "../../apps/welcome-component.tsx";
 import { AppManifest } from "./structure.ts";
 
+/** Application manifests registered with the desktop environment. */
 export const appArr: AppManifest[] = [
   {
     id: "default.welcome-app.camblsoup",
@@ -14,6 +15,7 @@ export const appArr: AppManifest[] = [
   },
 ];
 
+/** Application manifests indexed by application ID. */
 export const appRegistry: Map<string, AppManifest> = new Map(
   appArr.map((
     p,
