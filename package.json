@@ -7,16 +7,17 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-    "dev": "node --permission --allow-addons --allow-fs-read=. --allow-fs-write=./src/paraglide --allow-fs-write=./node_modules/.vite --allow-child-process --allow-worker ./node_modules/vite/bin/vite.js",
-    "build": "node --permission --allow-addons --allow-fs-read=. --allow-fs-write=./src/paraglide --allow-fs-write=./node_modules/.vite --allow-fs-write=./dist --allow-child-process --allow-worker ./node_modules/vite/bin/vite.js build",
-    "preview": "node --permission --allow-addons --allow-fs-read=. --allow-fs-write=./node_modules/.vite --allow-child-process ./node_modules/vite/bin/vite.js preview",
-    "test": "node --permission --allow-addons --allow-fs-read=. --allow-fs-write=./node_modules/.vite --allow-child-process --allow-worker ./node_modules/vitest/vitest.mjs run",
-    "typecheck": "node --permission --allow-fs-read=. ./node_modules/typescript/bin/tsc --noEmit",
+    "i18n:compile": "paraglide-js compile --project .inlang",
+    "dev": "npm run i18n:compile && vite",
+    "build": "npm run i18n:compile && vite build",
+    "preview": "npm run i18n:compile && vite preview",
+    "test": "vitest run --environment=node",
+    "typecheck": "npm run i18n:compile && tsc --noEmit",
     "lint": "oxlint",
     "format": "dprint fmt",
     "format:check": "dprint check",
-    "check": "pnpm typecheck && pnpm lint && pnpm format:check",
-    "machine-translate": "pnpm exec inlang machine translate --project .inlang"
+    "check": "npm run typecheck && npm run lint && npm run format:check",
+    "machine-translate": "inlang machine translate --project .inlang"
   },
   "dependencies": {
     "idb": "^8.0.3",
