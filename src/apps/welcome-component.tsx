@@ -1,4 +1,3 @@
-// @ts-types="solid-js"
 import { createSignal } from "solid-js";
 
 export { WelcomeApp };

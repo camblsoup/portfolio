@@ -1,5 +1,4 @@
-import { beforeEach, describe, it } from "@std/testing/bdd";
-import { expect } from "@std/expect";
+import { beforeEach, describe, expect, it } from "vitest";
 
 // Global browser-agnostic IndexedDB mocking
 import "fake-indexeddb/auto";

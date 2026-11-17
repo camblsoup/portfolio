@@ -51,7 +51,7 @@ export class VFSError extends Error {
     super(message);
     this.name = "VFSError";
 
-    // Insulates stack trace for cleaner debugging in Deno/Browser
+    // Insulates stack trace for cleaner debugging in browser environments
     if (this.stack) {
       const lines = this.stack.split("\n");
       // Remove the internal constructor call line from the stack trace

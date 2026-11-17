@@ -1,9 +1,39 @@
 {
-    "devDependencies": {
-        "@inlang/paraglide-js": "^2.20.2",
-        "@inlang/cli": "^3.0.0"
-    },
-    "scripts": {
-        "machine-translate": "inlang machine translate --project project.inlang"
-    }
+  "name": "myos-portfolio",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.9.0",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "node --permission --allow-addons --allow-fs-read=. --allow-fs-write=./src/paraglide --allow-fs-write=./node_modules/.vite --allow-child-process --allow-worker ./node_modules/vite/bin/vite.js",
+    "build": "node --permission --allow-addons --allow-fs-read=. --allow-fs-write=./src/paraglide --allow-fs-write=./node_modules/.vite --allow-fs-write=./dist --allow-child-process --allow-worker ./node_modules/vite/bin/vite.js build",
+    "preview": "node --permission --allow-addons --allow-fs-read=. --allow-fs-write=./node_modules/.vite --allow-child-process ./node_modules/vite/bin/vite.js preview",
+    "test": "node --permission --allow-addons --allow-fs-read=. --allow-fs-write=./node_modules/.vite --allow-child-process --allow-worker ./node_modules/vitest/vitest.mjs run",
+    "typecheck": "node --permission --allow-fs-read=. ./node_modules/typescript/bin/tsc --noEmit",
+    "lint": "oxlint",
+    "format": "dprint fmt",
+    "format:check": "dprint check",
+    "check": "pnpm typecheck && pnpm lint && pnpm format:check",
+    "machine-translate": "pnpm exec inlang machine translate --project .inlang"
+  },
+  "dependencies": {
+    "idb": "^8.0.3",
+    "solid-js": "^1.9.13",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@inlang/cli": "^3.0.0",
+    "@inlang/paraglide-js": "^2.20.2",
+    "fake-indexeddb": "^6.2.5",
+    "vite": "^8.1.0",
+    "vite-plugin-solid": "^2.11.12",
+    "vitest": "^4.0.0",
+    "typescript": "7.0.2",
+    "oxlint": "^1.94.0",
+    "dprint": "^0.65.0",
+    "@dprint/typescript": "0.101.0",
+    "@dprint/json": "0.26.0"
+  }
 }

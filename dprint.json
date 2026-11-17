@@ -1,0 +1,31 @@
+{
+  "$schema": "https://dprint.dev/schemas/v0.json",
+  "includes": [
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.js",
+    "**/*.jsx",
+    "**/*.mjs",
+    "**/*.cjs",
+    "**/*.json",
+    "**/*.jsonc"
+  ],
+  "excludes": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "src/paraglide/**"
+  ],
+  "plugins": [
+    "npm:@dprint/typescript@0.101.0",
+    "npm:@dprint/json@0.26.0"
+  ],
+  "typescript": {
+    "lineWidth": 100,
+    "indentWidth": 2,
+    "useTabs": false,
+    "newLineKind": "lf",
+    "bracePosition": "nextLine",
+    "nextControlFlowPosition": "nextLine",
+    "useBraces": "always"
+  }
+}

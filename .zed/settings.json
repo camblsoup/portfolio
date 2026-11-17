@@ -1,41 +1,48 @@
 {
   "format_on_save": "on",
-  "lsp": {
-    "deno": {
-      "settings": {
-        "deno": {
-          "enable": true
-        }
-      }
-    }
-  },
   "languages": {
     "JavaScript": {
-      "language_servers": [
-        "deno",
-        "!typescript-language-server",
-        "!vtsls",
-        "!eslint"
-      ],
-      "formatter": "language_server"
+      "language_servers": ["typescript-ls"],
+      "formatter": {
+        "external": {
+          "command": "pnpm",
+          "arguments": ["exec", "dprint", "fmt", "--stdin", "--stdin-file-path", "{buffer_path}"]
+        }
+      }
     },
     "TypeScript": {
-      "language_servers": [
-        "deno",
-        "!typescript-language-server",
-        "!vtsls",
-        "!eslint"
-      ],
-      "formatter": "language_server"
+      "language_servers": ["typescript-ls"],
+      "formatter": {
+        "external": {
+          "command": "pnpm",
+          "arguments": ["exec", "dprint", "fmt", "--stdin", "--stdin-file-path", "{buffer_path}"]
+        }
+      }
     },
     "TSX": {
-      "language_servers": [
-        "deno",
-        "!typescript-language-server",
-        "!vtsls",
-        "!eslint"
-      ],
-      "formatter": "language_server"
+      "language_servers": ["typescript-ls"],
+      "formatter": {
+        "external": {
+          "command": "pnpm",
+          "arguments": ["exec", "dprint", "fmt", "--stdin", "--stdin-file-path", "{buffer_path}"]
+        }
+      }
+    },
+    "JSON": {
+      "formatter": {
+        "external": {
+          "command": "pnpm",
+          "arguments": ["exec", "dprint", "fmt", "--stdin", "--stdin-file-path", "{buffer_path}"]
+        }
+      }
+    },
+    "JSONC": {
+      "formatter": {
+        "external": {
+          "command": "pnpm",
+          "arguments": ["exec", "dprint", "fmt", "--stdin", "--stdin-file-path", "{buffer_path}"]
+        }
+      }
     }
   }
 }
