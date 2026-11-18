@@ -1,6 +1,7 @@
 import * as z from "zod";
 
-export enum VFSNodeType {
+export enum VFSNodeType
+{
   DIRECTORY,
   FILE,
 }
@@ -43,19 +44,28 @@ export type VFSFileNode = z.infer<typeof VFSFileNodeSchema>;
 export type VFSContent = z.infer<typeof VFSContentSchema>;
 export type VFSNode = z.infer<typeof VFSNodeSchema>;
 
-export class VFSError extends Error {
+export class VFSError extends Error
+{
   constructor(
-    public code: "ENOENT" | "ENOTDIR" | "EEXIST",
+    public code:
+      | "ENOENT"
+      | "ENOTDIR"
+      | "EEXIST"
+      | "EACCES"
+      | "ENOTEMPTY",
     message: string,
-  ) {
+  )
+  {
     super(message);
     this.name = "VFSError";
 
     // Insulates stack trace for cleaner debugging in browser environments
-    if (this.stack) {
+    if (this.stack)
+    {
       const lines = this.stack.split("\n");
       // Remove the internal constructor call line from the stack trace
-      if (lines[1] && lines[1].includes("VFSError")) {
+      if (lines[1] && lines[1].includes("VFSError"))
+      {
         lines.splice(1, 1);
         this.stack = lines.join("\n");
       }
