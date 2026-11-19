@@ -1,25 +1,61 @@
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
+import type { FileSystemAction } from "../process-context.ts";
+import type { ProcessFileSystem } from "../vfs/vfs.ts";
 
-export interface ChromeMenuItem {
+export interface ChromeMenuItem
+{
   label: string;
   disabled?: boolean;
   onClick: () => void;
 }
 
-export interface ChromeMenuCategory {
+export interface ChromeMenuCategory
+{
   label: string;
   items: ChromeMenuItem[];
 }
 
-export interface AppBridge {
-  pid: number;
-  setMenus: (menus: ChromeMenuCategory[]) => void;
+export interface SaveDialogBridge
+{
+  suggestedName: string;
+  select: (path: string) => void;
+  cancel: () => void;
 }
 
-export interface AppManifest {
+export interface AppBridge
+{
+  pid: number;
+  fileSystem: ProcessFileSystem;
+  openedFile?: string;
+  openedDirectory?: string;
+  saveDialog?: SaveDialogBridge;
+  openPath: (path: string) => Promise<void>;
+  chooseSavePath: (suggestedName: string) => Promise<string | undefined>;
+  setMenus: (menus: ChromeMenuCategory[]) => void;
+  setContextMenu: (items: ChromeMenuItem[]) => void;
+}
+
+export interface AppComponentProps
+{
+  bridge: AppBridge;
+}
+
+export interface FileAssociation
+{
+  mimeType: string;
+  actions: readonly FileSystemAction[];
+  icon?: string;
+}
+
+export interface AppManifest
+{
   id: string;
   name: string;
-  icon: string; // Should be a path to some image living in a defined folder, come up with this later idk
+  icon: string;
+  binaryPath?: string;
+  desktopPath?: string;
+  directoryHandler?: boolean;
+  fileAssociations?: readonly FileAssociation[];
 
   defaultWindowConfig: {
     width: number;
@@ -32,5 +68,5 @@ export interface AppManifest {
     singleton?: boolean;
   };
 
-  component: Component;
+  component: Component<AppComponentProps>;
 }

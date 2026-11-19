@@ -1,6 +1,11 @@
 import { openDB } from "idb";
 import * as z from "zod";
-import { createProcessContext, FileSystemAction, ProcessContext } from "../process-context.ts";
+import {
+  createProcessContext,
+  FileSystemAction,
+  FileSystemGrant,
+  ProcessContext,
+} from "../process-context.ts";
 import { contentCache, inodeCache } from "./cache.ts";
 import {
   CanonicalPathSchema,
@@ -14,17 +19,29 @@ import {
   VFSNodeType,
 } from "./structure.ts";
 
+export type VFSChangeListener = (path: string) => void;
+
+const changeListeners = new Set<VFSChangeListener>();
+
 export interface ProcessFileSystem
 {
   readMetadata(path: string): Promise<VFSNode>;
   readContent(path: string): Promise<Uint8Array>;
   listDirectory(path: string): Promise<VFSNode[]>;
-  writeFile(path: string, content: VFSContent): Promise<VFSNode>;
+  writeFile(path: string, content: VFSContent, mimeType?: string): Promise<VFSNode>;
   createDirectory(path: string): Promise<VFSNode>;
   delete(path: string): Promise<void | null>;
+  move(sourcePath: string, destinationPath: string): Promise<VFSNode>;
+  move(sourcePath: string, destinationPath: string): Promise<VFSNode>;
 }
 
 export const vfs = {
+  subscribe(listener: VFSChangeListener): () => void
+  {
+    changeListeners.add(listener);
+    return () => changeListeners.delete(listener);
+  },
+
   async ensureRoot(): Promise<VFSDirectoryNode>
   {
     const db = await dbSingleton;
@@ -64,44 +81,54 @@ export const vfs = {
     return root;
   },
 
-  forProcess(context: ProcessContext): ProcessFileSystem
+  forProcess(
+    context: ProcessContext,
+    additionalGrants: () => readonly FileSystemGrant[] = () => [],
+  ): ProcessFileSystem
   {
     // This scopes users of the facade; same-origin code still needs a real sandbox.
     const process = createProcessContext(context);
     return {
       readMetadata: async (path) =>
       {
-        assertCapability(process, "read", path);
+        assertCapability(process, "read", path, additionalGrants());
         await assertReadPermissions(path);
         return await vfs.readMetadata(path);
       },
       readContent: async (path) =>
       {
-        assertCapability(process, "read", path);
+        assertCapability(process, "read", path, additionalGrants());
         await assertReadPermissions(path);
         return await vfs.readContent(path);
       },
       listDirectory: async (path) =>
       {
-        assertCapability(process, "list", path);
+        assertCapability(process, "list", path, additionalGrants());
         await assertReadPermissions(path);
         return await vfs.listDirectory(path);
       },
-      writeFile: async (path, content) =>
+      writeFile: async (path, content, mimeType) =>
       {
-        await assertWritePermissions(process, path, true);
-        return await vfs.writeFile(path, content);
+        await assertWritePermissions(process, path, true, additionalGrants());
+        return await vfs.writeFile(path, content, mimeType);
       },
       createDirectory: async (path) =>
       {
         const normalizedPath = normalizeDirectoryPath(path);
-        await assertWritePermissions(process, normalizedPath, false);
+        await assertWritePermissions(process, normalizedPath, false, additionalGrants());
         return await vfs.createDirectory(normalizedPath);
       },
       delete: async (path) =>
       {
-        await assertWritePermissions(process, path, false);
+        await assertWritePermissions(process, path, false, additionalGrants());
         return await vfs.delete(path);
+      },
+      move: async (sourcePath, destinationPath) =>
+      {
+        const grants = additionalGrants();
+        await assertWritePermissions(process, sourcePath, false, grants);
+        await assertWritePermissions(process, destinationPath, false, grants);
+        return await vfs.move(sourcePath, destinationPath);
       },
     };
   },
@@ -133,7 +160,7 @@ export const vfs = {
     return children.toSorted((a, b) => a.name.localeCompare(b.name));
   },
 
-  async writeFile(path: string, content: VFSContent)
+  async writeFile(path: string, content: VFSContent, mimeType = "text/plain")
   {
     VFSContentSchema.parse(content);
 
@@ -148,7 +175,7 @@ export const vfs = {
       {
         throw new VFSError("EEXIST", `Is a directory: '${nodeName}'`);
       }
-      node = { ...existingNode, size: contentSize };
+      node = { ...existingNode, mimeType, size: contentSize };
     }
     else
     {
@@ -157,7 +184,7 @@ export const vfs = {
         parentId,
         name: nodeName,
         nodeType: VFSNodeType.FILE,
-        mimeType: "text/plain",
+        mimeType,
         permissions: { read: true, write: true },
         size: contentSize,
       };
@@ -203,6 +230,7 @@ export const vfs = {
         }
       }
       await tx.done;
+      notifyChange(path);
       return node;
     }
     catch (e)
@@ -275,6 +303,7 @@ export const vfs = {
       }
 
       await tx.done;
+      notifyChange(normalizedInput);
       return node;
     }
     catch (e)
@@ -307,6 +336,7 @@ export const vfs = {
       tx.objectStore("inodes").put(updatedNode, id);
       await tx.done;
       inodeCache.set(id, updatedNode);
+      notifyChange(path);
       return updatedNode;
     }
     catch (e)
@@ -315,6 +345,92 @@ export const vfs = {
       throw e;
     }
   },
+
+  async move(sourcePath: string, destinationPath: string): Promise<VFSNode>
+  {
+    const validatedSourcePath = CanonicalPathSchema.parse(sourcePath);
+    const validatedDestinationPath = CanonicalPathSchema.parse(destinationPath);
+    const sourceId = await resolvePathToId(validatedSourcePath);
+    if (sourceId === "root")
+    {
+      throw new VFSError("EEXIST", "Cannot move the root directory.");
+    }
+    if (validatedSourcePath === validatedDestinationPath)
+    {
+      return await loadMetadata(sourceId);
+    }
+
+    const sourceNode = await loadMetadata(sourceId);
+    if (!sourceNode.parentId)
+    {
+      throw new VFSError("EEXIST", `Cannot move '${validatedSourcePath}'.`);
+    }
+
+    const destinationParentPath = parentPathOf(validatedDestinationPath);
+    if (
+      sourceNode.nodeType === VFSNodeType.DIRECTORY &&
+      isWithinPath(destinationParentPath, validatedSourcePath)
+    )
+    {
+      throw new VFSError("EEXIST", "Cannot move a directory inside itself.");
+    }
+
+    const { parentId: destinationParentId, parentNode: destinationParent, nodeName, existingId } =
+      await prepareNodeContext(validatedDestinationPath);
+    if (existingId)
+    {
+      throw new VFSError("EEXIST", `Destination already exists: '${validatedDestinationPath}'`);
+    }
+
+    const sourceParent = await loadMetadata(sourceNode.parentId);
+    if (sourceParent.nodeType !== VFSNodeType.DIRECTORY)
+    {
+      throw new VFSError("ENOTDIR", `Not a directory: '${sourceParent.name}'`);
+    }
+
+    const { [sourceNode.name]: _, ...sourceChildren } = sourceParent.children;
+    const movedNode: VFSNode = {
+      ...sourceNode,
+      parentId: destinationParentId,
+      name: nodeName,
+    };
+    const updatedSourceParent: VFSNode = {
+      ...sourceParent,
+      children: sourceParent.id === destinationParentId
+        ? { ...sourceChildren, [nodeName]: sourceNode.id }
+        : sourceChildren,
+    };
+    const updatedDestinationParent: VFSNode = sourceParent.id === destinationParentId
+      ? updatedSourceParent
+      : {
+        ...destinationParent,
+        children: {
+          ...destinationParent.children,
+          [nodeName]: sourceNode.id,
+        },
+      };
+
+    const db = await dbSingleton;
+    const tx = db.transaction("inodes", "readwrite");
+    tx.objectStore("inodes").put(movedNode, movedNode.id);
+    tx.objectStore("inodes").put(updatedSourceParent, updatedSourceParent.id);
+    if (sourceParent.id !== destinationParentId)
+    {
+      tx.objectStore("inodes").put(updatedDestinationParent, updatedDestinationParent.id);
+    }
+    await tx.done;
+
+    inodeCache.set(movedNode.id, movedNode);
+    inodeCache.set(updatedSourceParent.id, updatedSourceParent);
+    if (sourceParent.id !== destinationParentId)
+    {
+      inodeCache.set(updatedDestinationParent.id, updatedDestinationParent);
+    }
+    notifyChange(validatedSourcePath);
+    notifyChange(validatedDestinationPath);
+    return movedNode;
+  },
+
 
   async delete(path: string)
   {
@@ -386,6 +502,7 @@ export const vfs = {
       }
 
       await tx.done;
+      notifyChange(path);
     }
     catch (e)
     {
@@ -433,6 +550,21 @@ const dbSingleton = openDB(DB_NAME, DB_VERSION, {
   },
 });
 
+function notifyChange(path: string): void
+{
+  for (const listener of changeListeners)
+  {
+    try
+    {
+      listener(path);
+    }
+    catch (error)
+    {
+      console.error("VFS change listener failed:", error);
+    }
+  }
+}
+
 async function resolvePathToId(path: string): Promise<string>
 {
   const parts = path.split("/").filter(Boolean);
@@ -479,10 +611,11 @@ function assertCapability(
   context: ProcessContext,
   action: FileSystemAction,
   path: string,
+  additionalGrants: readonly FileSystemGrant[] = [],
 ): string
 {
   const validatedPath = CanonicalPathSchema.parse(path);
-  const isGranted = context.fileSystemGrants.some((grant) =>
+  const isGranted = [...context.fileSystemGrants, ...additionalGrants].some((grant) =>
     grant.actions.includes(action) && isWithinPath(validatedPath, grant.path)
   );
 
@@ -519,9 +652,10 @@ async function assertWritePermissions(
   context: ProcessContext,
   path: string,
   checkExistingFile: boolean,
+  additionalGrants: readonly FileSystemGrant[] = [],
 ): Promise<void>
 {
-  const validatedPath = assertCapability(context, "write", path);
+  const validatedPath = assertCapability(context, "write", path, additionalGrants);
   const { parentNode, existingId } = await prepareNodeContext(validatedPath);
   const parentPath = parentPathOf(validatedPath);
 

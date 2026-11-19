@@ -69,6 +69,15 @@ describe("Virtual File System (VFS) Contract Invariants", () =>
       );
       expect((await fs.listDirectory("/apps/notes/data")).map((node) => node.name))
         .toEqual(["note.txt"]);
+      await fs.createDirectory("/apps/notes/archive");
+      await fs.move("/apps/notes/data/note.txt", "/apps/notes/archive/note.txt");
+      await expect(fs.readContent("/apps/notes/archive/note.txt")).resolves.toEqual(
+        new TextEncoder().encode("private note"),
+      );
+      await expect(fs.move(
+        "/apps/notes/archive/note.txt",
+        "/private/note.txt",
+      )).rejects.toMatchObject({ code: "EACCES" });
 
       await expect(fs.readContent("/apps/notes-backup/note.txt"))
         .rejects.toMatchObject({ code: "EACCES" });
@@ -110,6 +119,22 @@ describe("Virtual File System (VFS) Contract Invariants", () =>
     });
   });
 
+  describe("0.1. Change Notifications", () =>
+  {
+    it("notifies subscribers after persisted file and directory changes", async () =>
+    {
+      const changedPaths: string[] = [];
+      const unsubscribe = vfs.subscribe((path) => changedPaths.push(path));
+
+      await vfs.writeFile("/changed.txt", new Uint8Array([1]));
+      await vfs.createDirectory("/new-folder");
+      unsubscribe();
+      await vfs.writeFile("/after-unsubscribe.txt", new Uint8Array([2]));
+
+      expect(changedPaths).toEqual(["/changed.txt", "/new-folder"]);
+    });
+  });
+
   describe("1. Path Traversal & Structural Integrity", () =>
   {
     it("should allow multi-level nested directory paths to be resolved sequentially", async () =>
@@ -137,6 +162,23 @@ describe("Virtual File System (VFS) Contract Invariants", () =>
 
       await expect(operation).rejects.toThrow(VFSError);
       await expect(operation).rejects.toThrow(/not a directory|enotdir/i);
+    });
+
+    it("should move files without changing their contents and prevent directory cycles", async () =>
+    {
+      await vfs.createDirectory("/source");
+      await vfs.createDirectory("/destination");
+      await vfs.createDirectory("/source/nested");
+      const content = new TextEncoder().encode("move me");
+      await vfs.writeFile("/source/note.txt", content);
+
+      const moved = await vfs.move("/source/note.txt", "/destination/renamed.txt");
+      expect(moved.name).toBe("renamed.txt");
+      await expect(vfs.readMetadata("/source/note.txt"))
+        .rejects.toMatchObject({ code: "ENOENT" });
+      await expect(vfs.readContent("/destination/renamed.txt")).resolves.toEqual(content);
+      await expect(vfs.move("/source", "/source/nested/source"))
+        .rejects.toMatchObject({ code: "EEXIST" });
     });
 
     it("should protect the root and reject deletion of non-empty directories", async () =>
