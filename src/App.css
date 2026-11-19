@@ -1,0 +1,315 @@
+#root {
+    min-height: 100vh;
+}
+
+.desktop {
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+    background: white;
+}
+
+.taskbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.window-heading,
+.window-controls,
+.taskbar-windows {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.desktop-icons {
+    position: absolute;
+    inset: 0 0 3rem;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 7rem;
+    grid-template-rows: repeat(auto-fill, 7rem);
+    align-content: start;
+    justify-content: start;
+    gap: 0.5rem;
+    overflow: auto;
+    padding: 0.75rem;
+}
+
+.desktop-item {
+    display: flex;
+    width: 6rem;
+    min-height: 6rem;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    border: 1px solid transparent;
+    background: white;
+}
+
+.desktop-item.selected {
+    border: 1px solid black;
+}
+
+.desktop-item:hover {
+    border: 1px dashed black;
+}
+
+.desktop-item-icon {
+    display: grid;
+    width: 4rem;
+    height: 4rem;
+    place-items: center;
+    border: 1px solid black;
+    background: white;
+}
+
+.desktop-item-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.desktop-item-name {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    text-align: center;
+}
+
+.workspace {
+    position: absolute;
+    inset: 0 0 3rem;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.managed-window {
+    position: absolute;
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid black;
+    background: white;
+    pointer-events: auto;
+}
+
+.window-titlebar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid black;
+    padding: 4px;
+    background: white;
+    user-select: none;
+    touch-action: none;
+}
+
+.window-decorator {
+    display: flex;
+    min-height: 0;
+    flex: 1;
+    flex-direction: column;
+    overflow: hidden;
+    background: white;
+}
+
+.window-menu-bar {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border-bottom: 1px solid black;
+    background: white;
+}
+
+.window-menu-items {
+    z-index: 1000;
+    display: flex;
+    min-width: 8rem;
+    flex-direction: column;
+    padding: 0.25rem;
+    border: 1px solid black;
+    background: white;
+}
+
+.window-menu-item {
+    text-align: left;
+}
+
+.window-app-content {
+    position: relative;
+    min-height: 0;
+    flex: 1;
+    overflow: hidden;
+    padding: 0;
+    background: white;
+}
+
+.window-context-menu {
+    position: absolute;
+    z-index: 1001;
+    display: flex;
+    min-width: 11rem;
+    flex-direction: column;
+    padding: 0.25rem;
+    border: 1px solid black;
+    background: white;
+}
+
+.window-context-menu button {
+    text-align: left;
+}
+
+.notes-editor {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    box-sizing: border-box;
+    border: 0;
+    resize: none;
+}
+
+.file-manager {
+    display: flex;
+    height: 100%;
+    min-height: 0;
+    flex-direction: column;
+}
+
+.file-manager-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-bottom: 1px solid black;
+    background: white;
+}
+
+.file-manager-main {
+    display: flex;
+    min-height: 0;
+    flex: 1;
+}
+
+.folder-tree {
+    width: 35%;
+    min-width: 8rem;
+    overflow: auto;
+    padding: 0.25rem;
+    border-right: 1px solid black;
+}
+
+.folder-tree-row {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.folder-tree-toggle {
+    width: 1.5rem;
+    flex: 0 0 auto;
+}
+
+.folder-tree-name {
+    flex: 1;
+    text-align: left;
+}
+
+.folder-tree-children {
+    margin-left: 0.75rem;
+}
+
+.file-manager-list {
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+    flex: 1;
+    flex-direction: column;
+    overflow: auto;
+}
+
+.file-manager-entry {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.25rem;
+}
+
+.file-manager-save {
+    display: flex;
+    align-items: end;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-top: 1px solid black;
+    background: white;
+}
+
+.file-manager-save label {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.file-manager-save input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.resize-handle {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 1rem;
+    height: 1rem;
+    touch-action: none;
+    cursor: nw-resize;
+}
+
+.taskbar {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    min-height: 3rem;
+    padding: 0 1rem;
+    border-top: 1px solid black;
+    background: white;
+}
+
+.taskbar-windows {
+    min-width: 0;
+    flex: 1;
+    overflow-x: auto;
+}
+
+.taskbar-tray {
+    margin-left: auto;
+    padding-left: 0.5rem;
+    border-left: 1px solid black;
+    white-space: nowrap;
+}
+
+@media (max-width: 680px) {
+    .desktop-icons,
+    .workspace {
+        inset: 0 0 3rem;
+    }
+
+    .managed-window {
+        top: 0.5rem !important;
+        left: 0.5rem !important;
+        width: calc(100% - 1rem) !important;
+        height: calc(100% - 1rem) !important;
+    }
+
+    .taskbar-tray {
+        display: none;
+    }
+}

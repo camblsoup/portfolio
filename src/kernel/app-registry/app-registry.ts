@@ -1,16 +1,37 @@
-import { WelcomeApp } from "../../apps/welcome-component.tsx";
-import { AppManifest } from "./structure.ts";
+import { FileManagerApp } from "../../apps/file-manager-app.tsx";
+import { NotesApp } from "../../apps/notes-app.tsx";
+import type { AppManifest } from "./structure.ts";
 
 export const appArr: AppManifest[] = [
   {
-    id: "default.welcome-app.camblsoup",
-    name: "Welcome App",
+    id: "default.notes-app.camblsoup",
+    name: "Notes",
     icon: "",
+    binaryPath: "/system/apps/notes.app",
+    fileAssociations: [{ mimeType: "text/plain", actions: ["read", "write"] }],
     defaultWindowConfig: {
-      width: 100,
-      height: 100,
+      width: 480,
+      height: 300,
+      minWidth: 320,
+      minHeight: 220,
     },
-    component: WelcomeApp,
+
+    component: NotesApp,
+  },
+  {
+    id: "default.file-manager.camblsoup",
+    name: "Files",
+    icon: "",
+    binaryPath: "/system/apps/files.app",
+    desktopPath: "/home/Desktop/Files.app",
+    directoryHandler: true,
+    defaultWindowConfig: {
+      width: 560,
+      height: 400,
+      minWidth: 360,
+      minHeight: 240,
+    },
+    component: FileManagerApp,
   },
 ];
 
