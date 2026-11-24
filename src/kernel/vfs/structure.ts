@@ -27,6 +27,7 @@ export const VFSDirectoryNodeSchema = baseVFSNodeSchema.extend({
 export const VFSFileNodeSchema = baseVFSNodeSchema.extend({
   nodeType: z.literal(VFSNodeType.FILE),
   mimeType: z.string(),
+  sourceVersion: z.number().int().nonnegative().optional(),
 });
 
 export const VFSNodeSchema = z.discriminatedUnion("nodeType", [

@@ -4,6 +4,7 @@ import { AppManifest } from "./app-registry/structure.ts";
 import { DESKTOP_DIRECTORY, Kernel, LOCAL_TIME_PATH, LOCALE_CONFIG_PATH } from "./kernel.ts";
 import { ProcessManager, ProcessManagerError } from "./process-manager.ts";
 import { WindowManager } from "./window-manager.ts";
+import { vfs } from "./vfs/vfs.ts";
 
 const testFilesApp: AppManifest = {
   id: "test.files",
@@ -199,6 +200,31 @@ describe("Kernel process and window lifecycle", () =>
         && process.bridge.openedFile === `${DESKTOP_DIRECTORY}/WELCOME.txt`
       ),
     ).toBe(true);
+  });
+
+  it("updates bundled files when their source version advances", async () =>
+  {
+    const path = `${DESKTOP_DIRECTORY}/WELCOME.txt`;
+    const kernel = new Kernel({ registry: new Map() });
+    await kernel.initialize();
+
+    await vfs.writeFile(
+      path,
+      new TextEncoder().encode("stale bundled welcome"),
+      "text/plain",
+      0,
+    );
+
+    const restartedKernel = new Kernel({ registry: new Map() });
+    await restartedKernel.initialize();
+    const updatedContent = await vfs.readContent(path);
+    expect(new TextDecoder().decode(updatedContent)).not.toBe("stale bundled welcome");
+    expect(await vfs.readMetadata(path)).toMatchObject({ sourceVersion: 1 });
+
+    await vfs.writeFile(path, new TextEncoder().encode("user edit"), "text/plain");
+    const nextKernel = new Kernel({ registry: new Map() });
+    await nextKernel.initialize();
+    await expect(vfs.readContent(path)).resolves.toEqual(new TextEncoder().encode("user edit"));
   });
 
   it("opens Files for Save As and grants access only to the chosen path", async () =>

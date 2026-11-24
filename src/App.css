@@ -155,13 +155,21 @@ textarea {
     display: flex;
     min-width: 8rem;
     flex-direction: column;
-    padding: 0.25rem;
     border: 1px solid black;
     background: white;
 }
 
 .window-menu-item {
     text-align: left;
+    user-select: none;
+    padding-top: 0.1rem;
+    padding-bottom: 0.1rem;
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+}
+
+.window-menu-item[data-highlighted] {
+    background: #eeeeee;
 }
 
 .window-app-content {
@@ -194,6 +202,15 @@ textarea {
     height: 100%;
     min-height: 0;
     overflow: auto;
+}
+
+.notes-plain-editor {
+    box-sizing: border-box;
+    border: 0;
+    padding: 2px;
+    color: black;
+    background: white;
+    resize: none;
 }
 
 .notes-editor .milkdown {
@@ -271,12 +288,21 @@ textarea {
 }
 
 .notes-editor .milkdown .ProseMirror blockquote {
-    margin: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     padding: 0;
+    margin: 0;
 }
 
-.notes-editor .milkdown .ProseMirror blockquote::before {
-    content: none;
+.notes-editor .milkdown .ProseMirror blockquote p::before {
+    align-self: center;
+    content: "| ";
+}
+
+.notes-editor .milkdown .milkdown-list-item-block li {
+    align-items: center;
+    height: 24px;
 }
 
 .file-manager {

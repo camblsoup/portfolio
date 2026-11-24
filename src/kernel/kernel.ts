@@ -12,6 +12,7 @@ export const DESKTOP_DIRECTORY = "/home/Desktop";
 // Stored as a UTF-8 IANA zone ID; browser APIs cannot consume Linux TZif files directly.
 export const LOCAL_TIME_PATH = "/etc/localtime";
 export const LOCALE_CONFIG_PATH = "/etc/locale.conf";
+const SYSTEM_FILES_VERSION = 1;
 
 export interface KernelOptions
 {
@@ -114,10 +115,28 @@ export class Kernel
     }
 
     await this.ensureFile(
-      `${DESKTOP_DIRECTORY}/WELCOME.txt`,
-      "Welcome to myOS. Open this file to view it in its associated app.\n",
+      `${DESKTOP_DIRECTORY}/welcome.txt`,
+      "Hi I'm Cameron and this is my little portfolio website!! Hopefully you're some recruiter"
+      + "for some cool company looking to hire me to do cool work for you, but if not I hope you "
+      + "enjoy looking around anyways!\n\n"
+      + "The website is pretty bare-bones as it is since it's just starting out... But I plan to "
+      + "add small novel games and apps you can play around with.\n\n"
+      + "Currently there is just this notes app and a file explorer...",
       "text/plain",
+      SYSTEM_FILES_VERSION,
     );
+
+    await this.ensureFile(
+      `${DESKTOP_DIRECTORY}/design_choices.txt`,
+      "This website is made with SolidJS and served via Github Pages. I tried to keep the styling "
+      + "relatively simple and faithful to default HTML styling as I feel it has it's own kind of "
+      + "charm that I enjoy.\n\n"
+      + "Hopefully you also find the website at least somewhat visually appealing in a novel kind of "
+      + "way. And if not I apologize, try to focus more on the functional aspects then :)",
+      "text/plain",
+      SYSTEM_FILES_VERSION,
+    );
+
     this.initialized = true;
   }
 
@@ -381,7 +400,12 @@ export class Kernel
     await vfs.createDirectory(path);
   }
 
-  private async ensureFile(path: string, content: string, mimeType: string): Promise<void>
+  private async ensureFile(
+    path: string,
+    content: string,
+    mimeType: string,
+    sourceVersion?: number,
+  ): Promise<void>
   {
     const existing = await findNode(path);
     if (existing)
@@ -390,9 +414,20 @@ export class Kernel
       {
         throw new Error(`Expected '${path}' to be a file.`);
       }
-      return;
+      if (
+        sourceVersion === undefined
+        || (existing.sourceVersion !== undefined && existing.sourceVersion >= sourceVersion)
+      )
+      {
+        return;
+      }
     }
-    await vfs.writeFile(path, new TextEncoder().encode(content), mimeType);
+    await vfs.writeFile(
+      path,
+      new TextEncoder().encode(content),
+      mimeType,
+      sourceVersion,
+    );
   }
 
   private async ensureAppBinary(manifest: AppManifest, binaryPath: string): Promise<void>

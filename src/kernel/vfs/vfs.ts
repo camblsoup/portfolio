@@ -160,7 +160,12 @@ export const vfs = {
     return children.toSorted((a, b) => a.name.localeCompare(b.name));
   },
 
-  async writeFile(path: string, content: VFSContent, mimeType = "text/plain")
+  async writeFile(
+    path: string,
+    content: VFSContent,
+    mimeType = "text/plain",
+    sourceVersion?: number,
+  )
   {
     VFSContentSchema.parse(content);
 
@@ -175,7 +180,12 @@ export const vfs = {
       {
         throw new VFSError("EEXIST", `Is a directory: '${nodeName}'`);
       }
-      node = { ...existingNode, mimeType, size: contentSize };
+      node = {
+        ...existingNode,
+        mimeType,
+        size: contentSize,
+        ...(sourceVersion === undefined ? {} : { sourceVersion }),
+      };
     }
     else
     {
@@ -187,6 +197,7 @@ export const vfs = {
         mimeType,
         permissions: { read: true, write: true },
         size: contentSize,
+        ...(sourceVersion === undefined ? {} : { sourceVersion }),
       };
     }
 
