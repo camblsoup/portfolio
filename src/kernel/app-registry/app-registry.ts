@@ -4,9 +4,9 @@ import type { AppManifest } from "./structure.ts";
 
 export const appArr: AppManifest[] = [
   {
-    id: "default.notes-app.camblsoup",
+    id: "apps.notes-app.camblsoup",
     name: "Notes",
-    icon: "",
+    icon: "/file-icons/notes.svg",
     binaryPath: "/system/apps/notes.app",
     fileAssociations: [
       { mimeType: "text/plain", actions: ["read", "write"] },
@@ -22,7 +22,7 @@ export const appArr: AppManifest[] = [
     component: NotesApp,
   },
   {
-    id: "default.file-manager.camblsoup",
+    id: "apps.file-manager.camblsoup",
     name: "Files",
     icon: "/file-icons/folder.svg",
     binaryPath: "/system/apps/files.app",
@@ -35,6 +35,20 @@ export const appArr: AppManifest[] = [
       minHeight: 240,
     },
     component: FileManagerApp,
+  },
+  {
+    id: "links.github.camblsoup",
+    name: "Github",
+    icon: "/file-icons/github.svg",
+    link: new URL("https://github.com/camblsoup"),
+    desktopPath: "/home/Desktop/Github.link",
+  },
+  {
+    id: "links.linkedin.camblsoup",
+    name: "LinkedIn",
+    icon: "/file-icons/linkedin.svg",
+    link: new URL("https://www.linkedin.com/in/cameronmclagan/"),
+    desktopPath: "/home/Desktop/LinkedIn.link",
   },
 ];
 

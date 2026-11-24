@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import "fake-indexeddb/auto";
 import { AppManifest } from "./app-registry/structure.ts";
 import { DESKTOP_DIRECTORY, Kernel, LOCAL_TIME_PATH, LOCALE_CONFIG_PATH } from "./kernel.ts";
@@ -143,8 +143,8 @@ describe("Kernel process and window lifecycle", () =>
     expect(windows.fullScreen(window.id)).toBe(true);
 
     windows.updateFrame(window.id, { width: 100, height: 100 });
-    expect(windows.getWindow(window.id)?.width).toBe(testApp.defaultWindowConfig.minWidth);
-    expect(windows.getWindow(window.id)?.height).toBe(testApp.defaultWindowConfig.minHeight);
+    expect(windows.getWindow(window.id)?.width).toBe(testApp.defaultWindowConfig?.minWidth);
+    expect(windows.getWindow(window.id)?.height).toBe(testApp.defaultWindowConfig?.minHeight);
 
     expect(windows.close(window.id)?.process.pid).toBe(process.pid);
     expect(windows.getWindows()).toHaveLength(0);
@@ -173,7 +173,7 @@ describe("Kernel process and window lifecycle", () =>
       new TextEncoder().encode("UTC"),
     )).rejects.toMatchObject({ code: "EACCES" });
 
-    const localeWindow = await kernel.openPath(LOCALE_CONFIG_PATH);
+    const localeWindow = (await kernel.openPath(LOCALE_CONFIG_PATH))!;
     await expect(localeWindow.process.bridge.fileSystem.writeFile(
       LOCALE_CONFIG_PATH,
       new TextEncoder().encode("LANG=en_US.UTF-8\n"),
@@ -202,11 +202,11 @@ describe("Kernel process and window lifecycle", () =>
     await kernel.initialize();
 
     const shortcutPath = `${DESKTOP_DIRECTORY}/Files.app`;
-    const shortcut = await kernel.openPath(shortcutPath);
+    const shortcut = (await kernel.openPath(shortcutPath))!;
     expect(shortcut.process.appId).toBe(testFilesApp.id);
     expect(shortcut.process.bridge.openedDirectory).toBe("/");
 
-    const fileManagerWindow = await kernel.openPath(DESKTOP_DIRECTORY);
+    const fileManagerWindow = (await kernel.openPath(DESKTOP_DIRECTORY))!;
     expect(fileManagerWindow.process.appId).toBe(testFilesApp.id);
     expect(fileManagerWindow.process.bridge.openedDirectory).toBe(DESKTOP_DIRECTORY);
     const entries = await fileManagerWindow.process.bridge.fileSystem.listDirectory(
@@ -291,11 +291,11 @@ describe("Kernel process and window lifecycle", () =>
     const kernel = new Kernel({ registry: new Map([[testApp.id, testApp]]) });
     await kernel.initialize();
 
-    const binaryWindow = await kernel.openPath("/system/apps/test.app");
+    const binaryWindow = (await kernel.openPath("/system/apps/test.app"))!;
     expect(binaryWindow.process.appId).toBe(testApp.id);
     expect(binaryWindow.process.bridge.openedFile).toBeUndefined();
 
-    const documentWindow = await kernel.openPath("/home/Desktop/WELCOME.txt");
+    const documentWindow = (await kernel.openPath("/home/Desktop/WELCOME.txt"))!;
     expect(documentWindow.process.appId).toBe(testApp.id);
     expect(documentWindow.process.bridge.openedFile).toBe("/home/Desktop/WELCOME.txt");
     const fileSystem = documentWindow.process.bridge.fileSystem;
@@ -314,12 +314,43 @@ describe("Kernel process and window lifecycle", () =>
       .rejects.toMatchObject({ code: "EACCES" });
   });
 
+  it("opens registered links in a new tab without starting an app process", async () =>
+  {
+    const linkApp: AppManifest = {
+      id: "test.link",
+      name: "External Link",
+      icon: "",
+      link: new URL("https://example.com"),
+      desktopPath: `${DESKTOP_DIRECTORY}/External.link`,
+    };
+    const kernel = new Kernel({ registry: new Map([[linkApp.id, linkApp]]) });
+    await kernel.initialize();
+    const open = vi.fn();
+    vi.stubGlobal("window", { open });
+
+    try
+    {
+      expect(await kernel.openPath(linkApp.desktopPath!)).toBeUndefined();
+      expect(open).toHaveBeenCalledWith(
+        linkApp.link.href,
+        "_blank",
+        "noopener,noreferrer",
+      );
+      expect(kernel.processManager.getProcesses()).toHaveLength(0);
+      expect(kernel.windowManager.getWindows()).toHaveLength(0);
+    }
+    finally
+    {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("boots the VFS and launches/closes an app through the kernel", async () =>
   {
     const kernel = new Kernel({ registry: new Map([[testApp.id, testApp]]) });
     await kernel.initialize();
 
-    const window = kernel.launchApp(testApp.id);
+    const window = kernel.launchApp(testApp.id)!;
     expect(kernel.processManager.get(window.process.pid)).toBeDefined();
 
     expect(kernel.closeWindow(window.id)).toBe(true);

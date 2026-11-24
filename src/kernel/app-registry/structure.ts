@@ -52,12 +52,13 @@ export interface AppManifest
   id: string;
   name: string;
   icon: string;
+  link?: URL;
   binaryPath?: string;
   desktopPath?: string;
   directoryHandler?: boolean;
   fileAssociations?: readonly FileAssociation[];
 
-  defaultWindowConfig: {
+  defaultWindowConfig?: {
     width: number;
     height: number;
     minWidth?: number;
@@ -68,5 +69,5 @@ export interface AppManifest
     singleton?: boolean;
   };
 
-  component: Component<AppComponentProps>;
+  component?: Component<AppComponentProps>;
 }

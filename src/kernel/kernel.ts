@@ -168,10 +168,16 @@ export class Kernel
     this.systemLocale = normalizedLocale;
   }
 
-  launchApp(appId: string): ManagedWindow
+  launchApp(appId: string): ManagedWindow | undefined
   {
     this.assertInitialized();
     const manifest = this.registry.get(appId);
+    if (manifest?.link)
+    {
+      window.open(manifest.link.href, "_blank", "noopener,noreferrer");
+      return;
+    }
+
     const process = this.processManager.start(
       appId,
       manifest?.directoryHandler ? { openedDirectory: "/" } : {},
@@ -190,9 +196,17 @@ export class Kernel
     return await vfs.listDirectory(path);
   }
 
-  async openPath(path: string): Promise<ManagedWindow>
+  async openPath(path: string): Promise<ManagedWindow | undefined>
   {
     this.assertInitialized();
+    const linkedApp = [...this.registry.values()].find((manifest) =>
+      manifest.link && (manifest.desktopPath === path || manifest.binaryPath === path)
+    );
+    if (linkedApp)
+    {
+      return this.launchApp(linkedApp.id);
+    }
+
     const node = await vfs.readMetadata(path);
     if (node.nodeType === VFSNodeType.DIRECTORY)
     {
