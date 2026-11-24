@@ -2,7 +2,7 @@ import { createSignal, onMount, Show } from "solid-js";
 import { Desktop } from "./components/desktop/desktop.tsx";
 import { KernelProvider } from "./components/kernel-provider.tsx";
 import { appRegistry } from "./kernel/app-registry/app-registry.ts";
-import { Kernel } from "./kernel/kernel.ts";
+import { DESKTOP_DIRECTORY, Kernel } from "./kernel/kernel.ts";
 import "./App.css";
 
 function App()
@@ -15,6 +15,7 @@ function App()
     void runtime.initialize().then(() =>
     {
       setKernel(runtime);
+      runtime.openPath(DESKTOP_DIRECTORY + "/welcome.md")
     }).catch((error: unknown) =>
     {
       console.error("Kernel startup failed.", error);
