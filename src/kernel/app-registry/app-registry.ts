@@ -8,6 +8,7 @@ export const appArr: AppManifest[] = [
     name: "Notes",
     icon: "/file-icons/notes.svg",
     binaryPath: "/system/apps/notes.app",
+    desktopPath: "/home/Desktop/Notes.app",
     fileAssociations: [
       { mimeType: "text/plain", actions: ["read", "write"] },
       { mimeType: "text/markdown", actions: ["read", "write"] },
