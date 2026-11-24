@@ -22,7 +22,10 @@ const testApp: AppManifest = {
   name: "Test App",
   icon: "",
   binaryPath: "/system/apps/test.app",
-  fileAssociations: [{ mimeType: "text/plain", actions: ["read", "write"] }],
+  fileAssociations: [
+    { mimeType: "text/plain", actions: ["read", "write"] },
+    { mimeType: "text/markdown", actions: ["read", "write"] },
+  ],
   defaultWindowConfig: {
     width: 400,
     height: 260,
@@ -209,20 +212,26 @@ describe("Kernel process and window lifecycle", () =>
     const entries = await fileManagerWindow.process.bridge.fileSystem.listDirectory(
       DESKTOP_DIRECTORY,
     );
-    expect(entries.map((entry) => entry.name)).toContain("WELCOME.txt");
+    expect(entries.map((entry) => entry.name)).toContain("WELCOME.MD");
+    expect(await vfs.readMetadata(`${DESKTOP_DIRECTORY}/WELCOME.MD`)).toMatchObject({
+      mimeType: "text/markdown",
+      sourceVersion: 2,
+    });
+    expect(new TextDecoder().decode(await vfs.readContent(`${DESKTOP_DIRECTORY}/WELCOME.MD`)))
+      .toContain("Hi, I'm Cameron");
 
-    await fileManagerWindow.process.bridge.openPath(`${DESKTOP_DIRECTORY}/WELCOME.txt`);
+    await fileManagerWindow.process.bridge.openPath(`${DESKTOP_DIRECTORY}/WELCOME.MD`);
     expect(
       kernel.processManager.getProcesses().some((process) =>
         process.appId === testApp.id
-        && process.bridge.openedFile === `${DESKTOP_DIRECTORY}/WELCOME.txt`
+        && process.bridge.openedFile === `${DESKTOP_DIRECTORY}/WELCOME.MD`
       ),
     ).toBe(true);
   });
 
   it("updates bundled files when their source version advances", async () =>
   {
-    const path = `${DESKTOP_DIRECTORY}/WELCOME.txt`;
+    const path = `${DESKTOP_DIRECTORY}/WELCOME.md`;
     const kernel = new Kernel({ registry: new Map() });
     await kernel.initialize();
 
@@ -237,7 +246,7 @@ describe("Kernel process and window lifecycle", () =>
     await restartedKernel.initialize();
     const updatedContent = await vfs.readContent(path);
     expect(new TextDecoder().decode(updatedContent)).not.toBe("stale bundled welcome");
-    expect(await vfs.readMetadata(path)).toMatchObject({ sourceVersion: 1 });
+    expect(await vfs.readMetadata(path)).toMatchObject({ sourceVersion: 2 });
 
     await vfs.writeFile(path, new TextEncoder().encode("user edit"), "text/plain");
     const nextKernel = new Kernel({ registry: new Map() });

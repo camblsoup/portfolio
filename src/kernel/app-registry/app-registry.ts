@@ -8,7 +8,10 @@ export const appArr: AppManifest[] = [
     name: "Notes",
     icon: "",
     binaryPath: "/system/apps/notes.app",
-    fileAssociations: [{ mimeType: "text/plain", actions: ["read", "write"] }],
+    fileAssociations: [
+      { mimeType: "text/plain", actions: ["read", "write"] },
+      { mimeType: "text/markdown", actions: ["read", "write"] },
+    ],
     defaultWindowConfig: {
       width: 480,
       height: 300,

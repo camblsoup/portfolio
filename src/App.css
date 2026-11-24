@@ -251,7 +251,7 @@ textarea {
 }
 
 .notes-editor .milkdown .ProseMirror p {
-    margin: 0;
+    margin: 0 0 1em;
     padding: 0;
 }
 

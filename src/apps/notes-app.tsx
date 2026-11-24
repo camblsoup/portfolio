@@ -75,7 +75,7 @@ export function NotesApp({ bridge }: AppComponentProps)
     await bridge.fileSystem.writeFile(
       path,
       new TextEncoder().encode(contents()),
-      "text/plain",
+      isMarkdownFile(path) ? "text/markdown" : "text/plain",
     );
   };
 

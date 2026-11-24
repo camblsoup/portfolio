@@ -12,7 +12,12 @@ export const DESKTOP_DIRECTORY = "/home/Desktop";
 // Stored as a UTF-8 IANA zone ID; browser APIs cannot consume Linux TZif files directly.
 export const LOCAL_TIME_PATH = "/etc/localtime";
 export const LOCALE_CONFIG_PATH = "/etc/locale.conf";
-const SYSTEM_FILES_VERSION = 1;
+const SYSTEM_FILES_VERSION = 2;
+const SYSTEM_FILES = import.meta.glob<string>("../system-files/**/*", {
+  eager: true,
+  query: "?inline",
+  import: "default",
+});
 
 export interface KernelOptions
 {
@@ -114,28 +119,15 @@ export class Kernel
       }
     }
 
-    await this.ensureFile(
-      `${DESKTOP_DIRECTORY}/welcome.txt`,
-      "Hi I'm Cameron and this is my little portfolio website!! Hopefully you're some recruiter"
-        + "for some cool company looking to hire me to do cool work for you, but if not I hope you "
-        + "enjoy looking around anyways!\n\n"
-        + "The website is pretty bare-bones as it is since it's just starting out... But I plan to "
-        + "add small novel games and apps you can play around with.\n\n"
-        + "Currently there is just this notes app and a file explorer...",
-      "text/plain",
-      SYSTEM_FILES_VERSION,
-    );
-
-    await this.ensureFile(
-      `${DESKTOP_DIRECTORY}/design_choices.txt`,
-      "This website is made with SolidJS and served via Github Pages. I tried to keep the styling "
-        + "relatively simple and faithful to default HTML styling as I feel it has it's own kind of "
-        + "charm that I enjoy.\n\n"
-        + "Hopefully you also find the website at least somewhat visually appealing in a novel kind of "
-        + "way. And if not I apologize, try to focus more on the functional aspects then :)",
-      "text/plain",
-      SYSTEM_FILES_VERSION,
-    );
+    for (const [sourcePath, dataUrl] of Object.entries(SYSTEM_FILES))
+    {
+      const relativePath = sourcePath.replace(/^\.\.\/system-files\//, "");
+      const path = `/${relativePath}`;
+      const parentPath = path.slice(0, path.lastIndexOf("/")) || "/";
+      const { content, mimeType } = decodeSystemFile(dataUrl, path);
+      await this.ensureDirectory(parentPath);
+      await this.ensureFile(path, content, mimeType, SYSTEM_FILES_VERSION);
+    }
 
     this.initialized = true;
   }
@@ -402,7 +394,7 @@ export class Kernel
 
   private async ensureFile(
     path: string,
-    content: string,
+    content: string | Uint8Array,
     mimeType: string,
     sourceVersion?: number,
   ): Promise<void>
@@ -424,7 +416,7 @@ export class Kernel
     }
     await vfs.writeFile(
       path,
-      new TextEncoder().encode(content),
+      typeof content === "string" ? new TextEncoder().encode(content) : content,
       mimeType,
       sourceVersion,
     );
@@ -520,6 +512,52 @@ function parseLocaleConfig(config: string): string
 
   const locale = langLine.slice("LANG=".length).replace(/\.UTF-8$/i, "");
   return normalizeLocale(locale.replaceAll("_", "-"));
+}
+
+function decodeSystemFile(
+  dataUrl: string,
+  path: string,
+): { content: Uint8Array; mimeType: string }
+{
+  const separator = dataUrl.indexOf(",");
+  if (!dataUrl.startsWith("data:") || separator < 0)
+  {
+    throw new Error(`Unable to import bundled system file '${path}'.`);
+  }
+
+  const metadata = dataUrl.slice("data:".length, separator).split(";");
+  const embeddedMimeType = metadata[0] || "application/octet-stream";
+  const payload = dataUrl.slice(separator + 1);
+  let content: Uint8Array;
+  if (metadata.includes("base64"))
+  {
+    const binary = atob(payload);
+    content = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+  }
+  else
+  {
+    content = new TextEncoder().encode(decodeURIComponent(payload));
+  }
+
+  return { content, mimeType: systemFileMimeType(path, embeddedMimeType) };
+}
+
+function systemFileMimeType(path: string, embeddedMimeType: string): string
+{
+  const normalizedPath = path.toLowerCase();
+  if (normalizedPath.endsWith(".md"))
+  {
+    return "text/markdown";
+  }
+  if (/\.(?:conf|cfg|config|env|ini|json|properties|toml|txt|text|ya?ml)$/.test(normalizedPath))
+  {
+    return "text/plain";
+  }
+  if (embeddedMimeType.startsWith("text/"))
+  {
+    return "text/plain";
+  }
+  return embeddedMimeType;
 }
 
 async function findNode(path: string)
