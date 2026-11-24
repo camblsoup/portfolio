@@ -1,9 +1,9 @@
 import { createEffect, createSignal, For, onCleanup, Show } from "solid-js";
 import { appRegistry } from "../../kernel/app-registry/app-registry.ts";
-import { defaultNodeIcon } from "../default-node-icon.ts";
 import { DESKTOP_DIRECTORY } from "../../kernel/kernel.ts";
 import type { VFSNode } from "../../kernel/vfs/structure.ts";
 import { VFSNodeType } from "../../kernel/vfs/structure.ts";
+import { defaultNodeIcon } from "../default-node-icon.ts";
 import { useKernel } from "../kernel-provider.tsx";
 
 interface DesktopIconsProps
@@ -76,7 +76,10 @@ export function DesktopIcons(props: DesktopIconsProps)
     };
     const unsubscribe = kernel.subscribeFileSystemChanges((changedPath) =>
     {
-      if (affectsDesktopDirectory(changedPath)) refresh();
+      if (affectsDesktopDirectory(changedPath))
+      {
+        refresh();
+      }
     });
 
     refresh();

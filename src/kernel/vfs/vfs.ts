@@ -379,8 +379,8 @@ export const vfs = {
 
     const destinationParentPath = parentPathOf(validatedDestinationPath);
     if (
-      sourceNode.nodeType === VFSNodeType.DIRECTORY &&
-      isWithinPath(destinationParentPath, validatedSourcePath)
+      sourceNode.nodeType === VFSNodeType.DIRECTORY
+      && isWithinPath(destinationParentPath, validatedSourcePath)
     )
     {
       throw new VFSError("EEXIST", "Cannot move a directory inside itself.");
@@ -441,7 +441,6 @@ export const vfs = {
     notifyChange(validatedDestinationPath);
     return movedNode;
   },
-
 
   async delete(path: string)
   {

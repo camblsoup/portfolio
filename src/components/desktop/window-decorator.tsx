@@ -23,9 +23,13 @@ export function WindowDecorator(props: WindowDecoratorProps)
   const menus = () => windowManager.state.menusByPid[currentWindow().pid] ?? [];
   const contextMenuItems = () => windowManager.state.contextMenusByPid[currentWindow().pid] ?? [];
 
-  const openContextMenu = (event: MouseEvent) => {
+  const openContextMenu = (event: MouseEvent) =>
+  {
     const items = contextMenuItems();
-    if (items.length === 0) return;
+    if (items.length === 0)
+    {
+      return;
+    }
 
     event.preventDefault();
     const container = event.currentTarget as HTMLElement;
@@ -104,9 +108,11 @@ export function WindowDecorator(props: WindowDecoratorProps)
           : `${currentWindow().height}px`,
         "z-index": currentWindow().zIndex,
       }}
-      onMouseDown={(event) => {
+      onMouseDown={(event) =>
+      {
         windowManager.focus(props.windowId);
-        if (!(event.target instanceof Element) || !event.target.closest(".window-context-menu")) {
+        if (!(event.target instanceof Element) || !event.target.closest(".window-context-menu"))
+        {
           setContextMenuPosition(undefined);
         }
       }}
@@ -133,7 +139,9 @@ export function WindowDecorator(props: WindowDecoratorProps)
           </button>
           <button
             type="button"
-            aria-label={`${currentWindow().state === "fullscreen" ? "Exit fullscreen" : "Fullscreen"} ${currentWindow().title}`}
+            aria-label={`${
+              currentWindow().state === "fullscreen" ? "Exit fullscreen" : "Fullscreen"
+            } ${currentWindow().title}`}
             aria-pressed={currentWindow().state === "fullscreen"}
             onClick={(event) =>
             {
@@ -187,8 +195,10 @@ export function WindowDecorator(props: WindowDecoratorProps)
         <div
           class="window-app-content"
           onContextMenu={openContextMenu}
-          onClick={(event) => {
-            if (!(event.target instanceof Element) || !event.target.closest(".window-context-menu")) {
+          onClick={(event) =>
+          {
+            if (!(event.target instanceof Element) || !event.target.closest(".window-context-menu"))
+            {
               setContextMenuPosition(undefined);
             }
           }}
@@ -212,7 +222,8 @@ export function WindowDecorator(props: WindowDecoratorProps)
                     type="button"
                     role="menuitem"
                     disabled={item.disabled}
-                    onClick={(event) => {
+                    onClick={(event) =>
+                    {
                       event.stopPropagation();
                       setContextMenuPosition(undefined);
                       item.onClick();

@@ -2,10 +2,6 @@
   "name": "myos-portfolio",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@12.9.0",
-  "engines": {
-    "node": ">=22.12.0"
-  },
   "scripts": {
     "i18n:compile": "paraglide-js compile --project .inlang",
     "dev": "npm run i18n:compile && vite",
@@ -38,5 +34,9 @@
     "vite": "^8.1.0",
     "vite-plugin-solid": "^2.11.12",
     "vitest": "^4.0.0"
+  },
+  "packageManager": "pnpm@12.9.0",
+  "engines": {
+    "node": ">=22.12.0"
   }
 }

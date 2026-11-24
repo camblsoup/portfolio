@@ -1,12 +1,13 @@
 import { createEffect, createSignal, For, onCleanup, Show } from "solid-js";
-import type { AppComponentProps, ChromeMenuItem } from "../kernel/app-registry/structure.ts";
 import { defaultNodeIcon } from "../components/default-node-icon.ts";
+import type { AppComponentProps, ChromeMenuItem } from "../kernel/app-registry/structure.ts";
 import type { VFSNode } from "../kernel/vfs/structure.ts";
 import { VFSNodeType } from "../kernel/vfs/structure.ts";
 
 const VFS_PATH_DRAG_TYPE = "application/x-myos-vfs-path";
 
-interface FolderTreeNodeProps {
+interface FolderTreeNodeProps
+{
   bridge: AppComponentProps["bridge"];
   path: string;
   currentPath: string;
@@ -14,35 +15,47 @@ interface FolderTreeNodeProps {
   onError: (message: string) => void;
 }
 
-function FolderTreeNode(props: FolderTreeNodeProps) {
+function FolderTreeNode(props: FolderTreeNodeProps)
+{
   const [expanded, setExpanded] = createSignal(false);
   const [folders, setFolders] = createSignal<VFSNode[]>([]);
 
-  const loadFolders = async () => {
-    try {
+  const loadFolders = async () =>
+  {
+    try
+    {
       const entries = await props.bridge.fileSystem.listDirectory(props.path);
       setFolders(entries.filter((entry) => entry.nodeType === VFSNodeType.DIRECTORY));
-    } catch (error) {
+    }
+    catch (error)
+    {
       props.onError(error instanceof Error ? error.message : "Unable to read folders");
     }
   };
 
-  const isCurrentBranch = () => {
+  const isCurrentBranch = () =>
+  {
     const prefix = props.path === "/" ? "/" : `${props.path}/`;
     return props.currentPath === props.path || props.currentPath.startsWith(prefix);
   };
 
-  createEffect(() => {
-    if (isCurrentBranch() && !expanded()) {
+  createEffect(() =>
+  {
+    if (isCurrentBranch() && !expanded())
+    {
       setExpanded(true);
       void loadFolders();
     }
   });
 
-  const toggle = () => {
+  const toggle = () =>
+  {
     const nextExpanded = !expanded();
     setExpanded(nextExpanded);
-    if (nextExpanded) void loadFolders();
+    if (nextExpanded)
+    {
+      void loadFolders();
+    }
   };
 
   return (
@@ -79,12 +92,14 @@ function FolderTreeNode(props: FolderTreeNodeProps) {
   );
 }
 
-function isWritablePath(path: string): boolean {
-  return path === "/home" || path.startsWith("/home/") || path === "/tmp" ||
-    path.startsWith("/tmp/");
+function isWritablePath(path: string): boolean
+{
+  return path === "/home" || path.startsWith("/home/") || path === "/tmp"
+    || path.startsWith("/tmp/");
 }
 
-export function FileManagerApp({ bridge }: AppComponentProps) {
+export function FileManagerApp({ bridge }: AppComponentProps)
+{
   const rootPath = bridge.openedDirectory ?? "/";
   const saveDialog = bridge.saveDialog;
   const [path, setPath] = createSignal(rootPath);
@@ -93,79 +108,120 @@ export function FileManagerApp({ bridge }: AppComponentProps) {
   const [refreshVersion, setRefreshVersion] = createSignal(0);
   const [error, setError] = createSignal("");
 
-  createEffect(() => {
+  createEffect(() =>
+  {
     const currentPath = path();
     refreshVersion();
     let cancelled = false;
     setError("");
 
-    void bridge.fileSystem.listDirectory(currentPath).then((nodes) => {
-      if (!cancelled) setEntries([...nodes]);
-    }).catch((reason: unknown) => {
-      if (!cancelled) {
+    void bridge.fileSystem.listDirectory(currentPath).then((nodes) =>
+    {
+      if (!cancelled)
+      {
+        setEntries([...nodes]);
+      }
+    }).catch((reason: unknown) =>
+    {
+      if (!cancelled)
+      {
         setError(reason instanceof Error ? reason.message : "Unable to read directory");
       }
     });
 
-    onCleanup(() => {
+    onCleanup(() =>
+    {
       cancelled = true;
     });
   });
 
   const childPath = (name: string) => path() === "/" ? `/${name}` : `${path()}/${name}`;
-  const navigateUp = () => {
+  const navigateUp = () =>
+  {
     const currentPath = path();
-    if (currentPath === "/") return;
+    if (currentPath === "/")
+    {
+      return;
+    }
     setPath(currentPath.slice(0, currentPath.lastIndexOf("/")) || "/");
   };
 
-  const openEntry = (entry: VFSNode) => {
+  const openEntry = (entry: VFSNode) =>
+  {
     const targetPath = childPath(entry.name);
-    if (entry.nodeType === VFSNodeType.DIRECTORY) {
+    if (entry.nodeType === VFSNodeType.DIRECTORY)
+    {
       setPath(targetPath);
-    } else if (saveDialog) {
+    }
+    else if (saveDialog)
+    {
       setFileName(entry.name);
-    } else {
-      void bridge.openPath(targetPath).catch((reason: unknown) => {
+    }
+    else
+    {
+      void bridge.openPath(targetPath).catch((reason: unknown) =>
+      {
         console.error(`Unable to open '${targetPath}'.`, reason);
       });
     }
   };
 
-  const createFolder = async () => {
+  const createFolder = async () =>
+  {
     const name = globalThis.prompt("Folder name")?.trim();
-    if (!name || name.includes("/")) return;
-    try {
+    if (!name || name.includes("/"))
+    {
+      return;
+    }
+    try
+    {
       await bridge.fileSystem.createDirectory(childPath(name));
       setRefreshVersion((version) => version + 1);
-    } catch (reason) {
+    }
+    catch (reason)
+    {
       console.error("Unable to create folder.", reason);
     }
   };
 
-  const createTextFile = async () => {
+  const createTextFile = async () =>
+  {
     const name = globalThis.prompt("File name", "Untitled.txt")?.trim();
-    if (!name || name.includes("/") || entries().some((entry) => entry.name === name)) return;
-    try {
+    if (!name || name.includes("/") || entries().some((entry) => entry.name === name))
+    {
+      return;
+    }
+    try
+    {
       await bridge.fileSystem.writeFile(childPath(name), new Uint8Array(), "text/plain");
       setRefreshVersion((version) => version + 1);
-    } catch (reason) {
+    }
+    catch (reason)
+    {
       console.error("Unable to create file.", reason);
     }
   };
 
-  const deleteEntry = async (entry: VFSNode) => {
+  const deleteEntry = async (entry: VFSNode) =>
+  {
     const targetPath = childPath(entry.name);
-    if (!isWritablePath(path()) || !globalThis.confirm(`Delete '${entry.name}'?`)) return;
-    try {
+    if (!isWritablePath(path()) || !globalThis.confirm(`Delete '${entry.name}'?`))
+    {
+      return;
+    }
+    try
+    {
       await bridge.fileSystem.delete(targetPath);
       setRefreshVersion((version) => version + 1);
-    } catch (reason) {
+    }
+    catch (reason)
+    {
       console.error(`Unable to delete '${targetPath}'.`, reason);
     }
   };
 
-  const setContextMenu = (event: MouseEvent) => {
+  const setContextMenu = (event: MouseEvent) =>
+  {
     event.preventDefault();
     const target = event.target instanceof Element
       ? event.target.closest<HTMLElement>("[data-vfs-path]")
@@ -175,9 +231,11 @@ export function FileManagerApp({ bridge }: AppComponentProps) {
     const writable = isWritablePath(path());
     const items: ChromeMenuItem[] = [];
 
-    if (entry) {
+    if (entry)
+    {
       items.push({ label: "Open", onClick: () => openEntry(entry) });
-      if (!saveDialog) {
+      if (!saveDialog)
+      {
         items.push({
           label: "Delete",
           disabled: !writable,
@@ -190,7 +248,8 @@ export function FileManagerApp({ bridge }: AppComponentProps) {
       disabled: !writable,
       onClick: () => void createFolder(),
     });
-    if (!saveDialog) {
+    if (!saveDialog)
+    {
       items.push({
         label: "New Text File",
         disabled: !writable,
@@ -200,40 +259,66 @@ export function FileManagerApp({ bridge }: AppComponentProps) {
     bridge.setContextMenu(items);
   };
 
-  const selectSavePath = () => {
+  const selectSavePath = () =>
+  {
     const name = fileName().trim();
-    if (!saveDialog || !name) return;
+    if (!saveDialog || !name)
+    {
+      return;
+    }
     saveDialog.select(childPath(name));
   };
 
   const canAcceptDrop = (event: DragEvent) =>
     !saveDialog && Array.from(event.dataTransfer?.types ?? []).includes(VFS_PATH_DRAG_TYPE);
 
-  const allowDrop = (event: DragEvent) => {
-    if (!canAcceptDrop(event)) return;
+  const allowDrop = (event: DragEvent) =>
+  {
+    if (!canAcceptDrop(event))
+    {
+      return;
+    }
     event.preventDefault();
-    if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+    if (event.dataTransfer)
+    {
+      event.dataTransfer.dropEffect = "move";
+    }
   };
 
-  const moveDroppedItem = (event: DragEvent, destinationDirectory: string) => {
-    if (!canAcceptDrop(event)) return;
+  const moveDroppedItem = (event: DragEvent, destinationDirectory: string) =>
+  {
+    if (!canAcceptDrop(event))
+    {
+      return;
+    }
     event.preventDefault();
     event.stopPropagation();
 
     const sourcePath = event.dataTransfer?.getData(VFS_PATH_DRAG_TYPE);
-    if (!sourcePath) return;
+    if (!sourcePath)
+    {
+      return;
+    }
     const sourceParent = sourcePath.slice(0, sourcePath.lastIndexOf("/")) || "/";
-    if (!isWritablePath(sourceParent) || !isWritablePath(destinationDirectory)) return;
+    if (!isWritablePath(sourceParent) || !isWritablePath(destinationDirectory))
+    {
+      return;
+    }
 
     const draggedName = sourcePath.slice(sourcePath.lastIndexOf("/") + 1);
     const destinationPath = destinationDirectory === "/"
       ? `/${draggedName}`
       : `${destinationDirectory}/${draggedName}`;
-    if (destinationPath === sourcePath) return;
+    if (destinationPath === sourcePath)
+    {
+      return;
+    }
 
-    void bridge.fileSystem.move(sourcePath, destinationPath).then(() => {
+    void bridge.fileSystem.move(sourcePath, destinationPath).then(() =>
+    {
       setRefreshVersion((version) => version + 1);
-    }).catch((reason: unknown) => {
+    }).catch((reason: unknown) =>
+    {
       console.error(`Unable to move '${sourcePath}' to '${destinationPath}'.`, reason);
     });
   };
@@ -266,16 +351,24 @@ export function FileManagerApp({ bridge }: AppComponentProps) {
                 type="button"
                 data-vfs-path={childPath(entry.name)}
                 draggable={!saveDialog && isWritablePath(path())}
-                onDragStart={(event) => {
-                  if (!event.dataTransfer) return;
+                onDragStart={(event) =>
+                {
+                  if (!event.dataTransfer)
+                  {
+                    return;
+                  }
                   event.dataTransfer.setData(VFS_PATH_DRAG_TYPE, childPath(entry.name));
                   event.dataTransfer.effectAllowed = "move";
                 }}
                 onDragOver={entry.nodeType === VFSNodeType.DIRECTORY ? allowDrop : undefined}
-                onDrop={(event) => {
-                  if (entry.nodeType === VFSNodeType.DIRECTORY) {
+                onDrop={(event) =>
+                {
+                  if (entry.nodeType === VFSNodeType.DIRECTORY)
+                  {
                     moveDroppedItem(event, childPath(entry.name));
-                  } else {
+                  }
+                  else
+                  {
                     event.preventDefault();
                     event.stopPropagation();
                   }

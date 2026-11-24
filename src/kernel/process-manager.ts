@@ -269,7 +269,10 @@ export class ProcessManager
   private notifyContextMenu(pid: number): void
   {
     const items = this.getContextMenu(pid);
-    for (const listener of this.contextMenuListeners) listener(pid, items);
+    for (const listener of this.contextMenuListeners)
+    {
+      listener(pid, items);
+    }
   }
 
   private notifyMenus(pid: number): void

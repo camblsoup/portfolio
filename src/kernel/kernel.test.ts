@@ -3,8 +3,8 @@ import "fake-indexeddb/auto";
 import { AppManifest } from "./app-registry/structure.ts";
 import { DESKTOP_DIRECTORY, Kernel, LOCAL_TIME_PATH, LOCALE_CONFIG_PATH } from "./kernel.ts";
 import { ProcessManager, ProcessManagerError } from "./process-manager.ts";
-import { WindowManager } from "./window-manager.ts";
 import { vfs } from "./vfs/vfs.ts";
+import { WindowManager } from "./window-manager.ts";
 
 const testFilesApp: AppManifest = {
   id: "test.files",
@@ -67,7 +67,10 @@ describe("Kernel process and window lifecycle", () =>
     });
     const unsubscribeContextMenus = processes.subscribeContextMenus((pid, items) =>
     {
-      if (pid === process.pid) lastContextMenuCount = items.length;
+      if (pid === process.pid)
+      {
+        lastContextMenuCount = items.length;
+      }
     });
 
     process.bridge.setMenus([{
@@ -83,7 +86,8 @@ describe("Kernel process and window lifecycle", () =>
 
     process.bridge.setContextMenu([{
       label: "Delete",
-      onClick: () => {},
+      onClick: () =>
+      {},
     }]);
     expect(processes.getContextMenu(process.pid)).toHaveLength(1);
     expect(lastContextMenuCount).toBe(1);

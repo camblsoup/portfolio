@@ -117,11 +117,11 @@ export class Kernel
     await this.ensureFile(
       `${DESKTOP_DIRECTORY}/welcome.txt`,
       "Hi I'm Cameron and this is my little portfolio website!! Hopefully you're some recruiter"
-      + "for some cool company looking to hire me to do cool work for you, but if not I hope you "
-      + "enjoy looking around anyways!\n\n"
-      + "The website is pretty bare-bones as it is since it's just starting out... But I plan to "
-      + "add small novel games and apps you can play around with.\n\n"
-      + "Currently there is just this notes app and a file explorer...",
+        + "for some cool company looking to hire me to do cool work for you, but if not I hope you "
+        + "enjoy looking around anyways!\n\n"
+        + "The website is pretty bare-bones as it is since it's just starting out... But I plan to "
+        + "add small novel games and apps you can play around with.\n\n"
+        + "Currently there is just this notes app and a file explorer...",
       "text/plain",
       SYSTEM_FILES_VERSION,
     );
@@ -129,10 +129,10 @@ export class Kernel
     await this.ensureFile(
       `${DESKTOP_DIRECTORY}/design_choices.txt`,
       "This website is made with SolidJS and served via Github Pages. I tried to keep the styling "
-      + "relatively simple and faithful to default HTML styling as I feel it has it's own kind of "
-      + "charm that I enjoy.\n\n"
-      + "Hopefully you also find the website at least somewhat visually appealing in a novel kind of "
-      + "way. And if not I apologize, try to focus more on the functional aspects then :)",
+        + "relatively simple and faithful to default HTML styling as I feel it has it's own kind of "
+        + "charm that I enjoy.\n\n"
+        + "Hopefully you also find the website at least somewhat visually appealing in a novel kind of "
+        + "way. And if not I apologize, try to focus more on the functional aspects then :)",
       "text/plain",
       SYSTEM_FILES_VERSION,
     );

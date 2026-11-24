@@ -5,9 +5,13 @@ const contentEntries = new Map<string, Uint8Array>();
 let currentByteSize = 0;
 
 export const contentCache = {
-  get(id: string): Uint8Array | undefined {
+  get(id: string): Uint8Array | undefined
+  {
     const data = contentEntries.get(id);
-    if (!data) return undefined;
+    if (!data)
+    {
+      return undefined;
+    }
 
     // Refresh LRU order: remove and re-append to make it "Most Recently Used"
     contentEntries.delete(id);
@@ -15,27 +19,33 @@ export const contentCache = {
     return data;
   },
 
-  set(id: string, data: Uint8Array): void {
-    if (data.byteLength > DEFAULT_MAX_BYTE_SIZE) {
+  set(id: string, data: Uint8Array): void
+  {
+    if (data.byteLength > DEFAULT_MAX_BYTE_SIZE)
+    {
       return;
     }
 
     // If the path already exists, subtract its old size before overwriting
-    if (contentEntries.has(id)) {
+    if (contentEntries.has(id))
+    {
       currentByteSize -= contentEntries.get(id)!.byteLength;
       contentEntries.delete(id);
     }
 
     // Evict old entries until we have enough headroom for the new payload
     while (
-      currentByteSize + data.byteLength > DEFAULT_MAX_BYTE_SIZE &&
-      contentEntries.size > 0
-    ) {
+      currentByteSize + data.byteLength > DEFAULT_MAX_BYTE_SIZE
+      && contentEntries.size > 0
+    )
+    {
       // The first item in the map iterator is the oldest/least recently used
       const oldestKey = contentEntries.keys().next().value;
-      if (oldestKey !== undefined) {
+      if (oldestKey !== undefined)
+      {
         const oldestData = contentEntries.get(oldestKey);
-        if (oldestData) {
+        if (oldestData)
+        {
           currentByteSize -= oldestData.byteLength;
         }
         contentEntries.delete(oldestKey);
@@ -47,28 +57,34 @@ export const contentCache = {
     currentByteSize += data.byteLength;
   },
 
-  has(id: string): boolean {
+  has(id: string): boolean
+  {
     return contentEntries.has(id);
   },
 
-  delete(id: string): void {
+  delete(id: string): void
+  {
     const data = contentEntries.get(id);
-    if (data) {
+    if (data)
+    {
       currentByteSize -= data.byteLength;
       contentEntries.delete(id);
     }
   },
 
-  clear(): void {
+  clear(): void
+  {
     contentEntries.clear();
     currentByteSize = 0;
   },
 
   // Debug methods for profiling/testing performance bounds
-  get sizeInBytes(): number {
+  get sizeInBytes(): number
+  {
     return currentByteSize;
   },
-  get entryCount(): number {
+  get entryCount(): number
+  {
     return contentEntries.size;
   },
 };
@@ -80,34 +96,45 @@ export type InodeUpdater = (
 const inodeEntries = new Map<string, VFSNode>();
 
 export const inodeCache = {
-  get(id: string): VFSNode | undefined {
+  get(id: string): VFSNode | undefined
+  {
     return inodeEntries.get(id);
   },
 
-  set(id: string, valueOrFn: VFSNode | InodeUpdater): void {
-    if (typeof valueOrFn === "function") {
+  set(id: string, valueOrFn: VFSNode | InodeUpdater): void
+  {
+    if (typeof valueOrFn === "function")
+    {
       const current = inodeEntries.get(id);
       const next = valueOrFn(current);
 
-      if (next === undefined) {
+      if (next === undefined)
+      {
         inodeEntries.delete(id);
-      } else {
+      }
+      else
+      {
         inodeEntries.set(id, next);
       }
-    } else {
+    }
+    else
+    {
       inodeEntries.set(id, valueOrFn);
     }
   },
 
-  has(id: string): boolean {
+  has(id: string): boolean
+  {
     return inodeEntries.has(id);
   },
 
-  delete(id: string): boolean {
+  delete(id: string): boolean
+  {
     return inodeEntries.delete(id);
   },
 
-  clear(): void {
+  clear(): void
+  {
     inodeEntries.clear();
   },
 };
