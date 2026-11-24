@@ -1,5 +1,30 @@
+@font-face {
+    font-family: "IBM Plex Mono";
+    src: url("../fonts/IBM%20Plex%20Mono%20Var-Roman.woff2") format("woff2");
+    font-weight: 100 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "IBM Plex Mono";
+    src: url("../fonts/IBM%20Plex%20Mono%20Var-Italic.woff2") format("woff2");
+    font-weight: 100 700;
+    font-style: italic;
+    font-display: swap;
+}
+
 #root {
     min-height: 100vh;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.875rem;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
 }
 
 .desktop {
@@ -71,6 +96,8 @@
 
 .desktop-item-name {
     max-width: 100%;
+    font-size: 0.75rem;
+    line-height: 1.2;
     overflow-wrap: anywhere;
     text-align: center;
 }
