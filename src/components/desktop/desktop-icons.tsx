@@ -3,6 +3,7 @@ import { appRegistry } from "../../kernel/app-registry/app-registry.ts";
 import { DESKTOP_DIRECTORY } from "../../kernel/kernel.ts";
 import type { VFSNode } from "../../kernel/vfs/structure.ts";
 import { VFSNodeType } from "../../kernel/vfs/structure.ts";
+import { extensionSort } from "../../utils/sorts.ts";
 import { defaultNodeIcon } from "../default-node-icon.ts";
 import { useKernel } from "../kernel-provider.tsx";
 
@@ -60,7 +61,7 @@ export function DesktopIcons(props: DesktopIconsProps)
     {
       const version = ++refreshVersion;
       setError("");
-      void kernel.listDirectory(DESKTOP_DIRECTORY).then((nodes) =>
+      void kernel.listDirectory(DESKTOP_DIRECTORY, extensionSort).then((nodes) =>
       {
         if (!cancelled && version === refreshVersion)
         {
