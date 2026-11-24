@@ -20,6 +20,10 @@
     font-size: 0.875rem;
 }
 
+body {
+    margin: 0;
+}
+
 button,
 input,
 select,
@@ -119,6 +123,14 @@ textarea {
     border: 1px solid black;
     background: white;
     pointer-events: auto;
+}
+
+.managed-window.fullscreen {
+    inset: 0;
+}
+
+.managed-window.fullscreen .resize-handle {
+    display: none;
 }
 
 .window-titlebar {
@@ -459,7 +471,7 @@ textarea {
         inset: 0 0 3rem;
     }
 
-    .managed-window {
+    .managed-window:not(.fullscreen) {
         top: 0.5rem !important;
         left: 0.5rem !important;
         width: calc(100% - 1rem) !important;

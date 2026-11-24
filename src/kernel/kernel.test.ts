@@ -121,6 +121,20 @@ describe("Kernel process and window lifecycle", () =>
     expect(windows.focus(window.id)).toBe(true);
     expect(windows.getWindow(window.id)?.state).toBe("normal");
 
+    expect(windows.fullScreen(window.id)).toBe(true);
+    expect(windows.getWindow(window.id)?.state).toBe("fullscreen");
+    expect(windows.focus(window.id)).toBe(true);
+    expect(windows.getWindow(window.id)?.state).toBe("fullscreen");
+    expect(windows.fullScreen(window.id)).toBe(true);
+    expect(windows.getWindow(window.id)?.state).toBe("normal");
+
+    expect(windows.fullScreen(window.id)).toBe(true);
+    expect(windows.minimize(window.id)).toBe(true);
+    expect(windows.getWindow(window.id)?.state).toBe("minimized");
+    expect(windows.focus(window.id)).toBe(true);
+    expect(windows.getWindow(window.id)?.state).toBe("fullscreen");
+    expect(windows.fullScreen(window.id)).toBe(true);
+
     windows.updateFrame(window.id, { width: 100, height: 100 });
     expect(windows.getWindow(window.id)?.width).toBe(testApp.defaultWindowConfig.minWidth);
     expect(windows.getWindow(window.id)?.height).toBe(testApp.defaultWindowConfig.minHeight);

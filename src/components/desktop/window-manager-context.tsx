@@ -36,6 +36,7 @@ export interface WindowManagerContextValue
   state: Store<WindowManagerState>;
   focus: (windowId: number) => void;
   minimize: (windowId: number) => void;
+  fullScreen: (windowID: number) => void;
   close: (windowId: number) => void;
   updateFrame: (windowId: number, update: WindowFrameUpdate) => void;
 }
@@ -82,6 +83,7 @@ export function WindowManagerProvider(props: { children: JSX.Element })
         state,
         focus: (windowId) => windowManager.focus(windowId),
         minimize: (windowId) => windowManager.minimize(windowId),
+        fullScreen: (windowId) => windowManager.fullScreen(windowId),
         close: (windowId) => kernel.closeWindow(windowId),
         updateFrame: (windowId, update) => windowManager.updateFrame(windowId, update),
       }}

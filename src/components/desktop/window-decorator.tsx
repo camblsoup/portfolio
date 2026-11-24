@@ -40,7 +40,7 @@ export function WindowDecorator(props: WindowDecoratorProps)
 
   const beginWindowInteraction = (event: PointerEvent, mode: "move" | "resize") =>
   {
-    if (event.button !== 0)
+    if (event.button !== 0 || currentWindow().state === "fullscreen")
     {
       return;
     }
@@ -90,13 +90,18 @@ export function WindowDecorator(props: WindowDecoratorProps)
     <article
       classList={{
         "managed-window": true,
+        fullscreen: currentWindow().state === "fullscreen",
         focused: props.windowId === windowManager.state.focusedWindowId,
       }}
       style={{
-        left: `${currentWindow().x}px`,
-        top: `${currentWindow().y}px`,
-        width: `${currentWindow().width}px`,
-        height: `${currentWindow().height}px`,
+        left: currentWindow().state === "fullscreen" ? undefined : `${currentWindow().x}px`,
+        top: currentWindow().state === "fullscreen" ? undefined : `${currentWindow().y}px`,
+        width: currentWindow().state === "fullscreen"
+          ? undefined
+          : `${currentWindow().width}px`,
+        height: currentWindow().state === "fullscreen"
+          ? undefined
+          : `${currentWindow().height}px`,
         "z-index": currentWindow().zIndex,
       }}
       onMouseDown={(event) => {
@@ -125,6 +130,18 @@ export function WindowDecorator(props: WindowDecoratorProps)
             }}
           >
             −
+          </button>
+          <button
+            type="button"
+            aria-label={`${currentWindow().state === "fullscreen" ? "Exit fullscreen" : "Fullscreen"} ${currentWindow().title}`}
+            aria-pressed={currentWindow().state === "fullscreen"}
+            onClick={(event) =>
+            {
+              event.stopPropagation();
+              windowManager.fullScreen(props.windowId);
+            }}
+          >
+            □
           </button>
           <button
             class="close-button"

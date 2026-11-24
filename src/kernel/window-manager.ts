@@ -1,6 +1,6 @@
 import { ManagedProcess } from "./process-manager.ts";
 
-export type WindowState = "normal" | "minimized";
+export type WindowState = "normal" | "fullscreen" | "minimized";
 
 export interface ManagedWindow
 {
@@ -13,6 +13,7 @@ export interface ManagedWindow
   readonly minWidth: number;
   readonly minHeight: number;
   readonly state: WindowState;
+  readonly restoreState: Exclude<WindowState, "minimized">;
   readonly zIndex: number;
 }
 
@@ -67,6 +68,7 @@ export class WindowManager
       minWidth: config.minWidth ?? 220,
       minHeight: config.minHeight ?? 140,
       state: "normal",
+      restoreState: "normal",
       zIndex: ++this.zIndex,
     });
 
@@ -83,7 +85,7 @@ export class WindowManager
     {
       return false;
     }
-    if (this.focusedWindowId === id && window.state === "normal")
+    if (this.focusedWindowId === id && window.state !== "minimized")
     {
       return true;
     }
@@ -92,7 +94,7 @@ export class WindowManager
       id,
       Object.freeze({
         ...window,
-        state: "normal",
+        state: window.state === "minimized" ? window.restoreState : window.state,
         zIndex: ++this.zIndex,
       }),
     );
@@ -109,11 +111,40 @@ export class WindowManager
       return false;
     }
 
-    this.windows.set(id, Object.freeze({ ...window, state: "minimized" }));
+    this.windows.set(
+      id,
+      Object.freeze({
+        ...window,
+        state: "minimized",
+        restoreState: window.state === "minimized" ? window.restoreState : window.state,
+      }),
+    );
     if (this.focusedWindowId === id)
     {
       this.focusTopmostVisible();
     }
+    this.notify();
+    return true;
+  }
+
+  fullScreen(id: number): boolean
+  {
+    const window = this.windows.get(id);
+    if (!window)
+    {
+      return false;
+    }
+
+    this.windows.set(
+      id,
+      Object.freeze({
+        ...window,
+        state: window.state === "fullscreen" ? "normal" : "fullscreen",
+        restoreState: window.state === "fullscreen" ? "normal" : "fullscreen",
+        zIndex: ++this.zIndex,
+      }),
+    );
+    this.focusedWindowId = id;
     this.notify();
     return true;
   }

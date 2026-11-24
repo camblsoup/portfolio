@@ -36,7 +36,7 @@ export function Taskbar()
                   active: windowId === windowManager.state.focusedWindowId,
                 }}
                 type="button"
-                onClick={() => windowManager.focus(windowId)}
+                onClick={() => currentWindow().state === "minimized" ? windowManager.focus(windowId) : windowManager.minimize(windowId)}
               >
                 {currentWindow().title}
                 <Show when={currentWindow().state === "minimized"}> · minimized</Show>
