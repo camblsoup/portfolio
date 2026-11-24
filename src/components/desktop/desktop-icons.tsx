@@ -1,5 +1,6 @@
 import { createEffect, createSignal, For, onCleanup, Show } from "solid-js";
 import { appRegistry } from "../../kernel/app-registry/app-registry.ts";
+import { defaultNodeIcon } from "../default-node-icon.ts";
 import { DESKTOP_DIRECTORY } from "../../kernel/kernel.ts";
 import type { VFSNode } from "../../kernel/vfs/structure.ts";
 import { VFSNodeType } from "../../kernel/vfs/structure.ts";
@@ -12,23 +13,29 @@ interface DesktopIconsProps
   onSelect: (itemId: string) => void;
 }
 
-function iconFor(item: VFSNode): string | undefined
+function iconFor(item: VFSNode): string
 {
-  if (item.nodeType === VFSNodeType.DIRECTORY)
-  {
-    return undefined;
-  }
-
+  const itemPath = `${DESKTOP_DIRECTORY}/${item.name}`;
   for (const manifest of appRegistry.values())
   {
-    const association = manifest.fileAssociations?.find(
-      (candidate) => candidate.mimeType === item.mimeType && candidate.icon,
-    );
-    if (association?.icon)
+    if (manifest.desktopPath === itemPath && manifest.icon)
     {
-      return association.icon;
+      return manifest.icon;
+    }
+
+    if (item.nodeType !== VFSNodeType.DIRECTORY)
+    {
+      const association = manifest.fileAssociations?.find(
+        (candidate) => candidate.mimeType === item.mimeType && candidate.icon,
+      );
+      if (association?.icon)
+      {
+        return association.icon;
+      }
     }
   }
+
+  return defaultNodeIcon(item);
 }
 
 function affectsDesktopDirectory(changedPath: string): boolean
@@ -91,7 +98,6 @@ export function DesktopIcons(props: DesktopIconsProps)
         {(item) =>
         {
           const icon = iconFor(item);
-          const directory = item.nodeType === VFSNodeType.DIRECTORY;
           return (
             <button
               classList={{
@@ -103,9 +109,7 @@ export function DesktopIcons(props: DesktopIconsProps)
               onDblClick={() => openItem(item)}
             >
               <span class="desktop-item-icon">
-                {icon
-                  ? <img src={icon} alt="" />
-                  : <span>{directory ? "folder" : "file"}</span>}
+                <img src={icon} alt="" />
               </span>
               <span class="desktop-item-name">{item.name}</span>
             </button>

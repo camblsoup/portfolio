@@ -21,7 +21,7 @@ export const appArr: AppManifest[] = [
   {
     id: "default.file-manager.camblsoup",
     name: "Files",
-    icon: "",
+    icon: "/file-icons/folder.svg",
     binaryPath: "/system/apps/files.app",
     desktopPath: "/home/Desktop/Files.app",
     directoryHandler: true,

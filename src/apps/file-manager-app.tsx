@@ -1,5 +1,6 @@
 import { createEffect, createSignal, For, onCleanup, Show } from "solid-js";
 import type { AppComponentProps, ChromeMenuItem } from "../kernel/app-registry/structure.ts";
+import { defaultNodeIcon } from "../components/default-node-icon.ts";
 import type { VFSNode } from "../kernel/vfs/structure.ts";
 import { VFSNodeType } from "../kernel/vfs/structure.ts";
 
@@ -51,6 +52,11 @@ function FolderTreeNode(props: FolderTreeNodeProps) {
           {expanded() ? "−" : "+"}
         </button>
         <button class="folder-tree-name" type="button" onClick={() => props.onSelect(props.path)}>
+          <img
+            class="folder-tree-icon"
+            src={expanded() ? "/file-icons/folder-open.svg" : "/file-icons/folder.svg"}
+            alt=""
+          />
           {props.path === "/" ? "/" : props.path.slice(props.path.lastIndexOf("/") + 1)}
         </button>
       </div>
@@ -276,7 +282,10 @@ export function FileManagerApp({ bridge }: AppComponentProps) {
                 }}
                 onDblClick={() => openEntry(entry)}
               >
-                <span>{entry.name}</span>
+                <span class="file-manager-entry-name">
+                  <img src={defaultNodeIcon(entry)} alt="" />
+                  {entry.name}
+                </span>
                 <small>
                   {entry.nodeType === VFSNodeType.DIRECTORY ? "Directory" : entry.mimeType}
                 </small>
