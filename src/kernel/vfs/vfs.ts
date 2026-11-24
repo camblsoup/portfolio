@@ -8,6 +8,7 @@ import {
 } from "../process-context.ts";
 import { contentCache, inodeCache } from "./cache.ts";
 import {
+  BaseVFSNode,
   CanonicalPathSchema,
   NodeNameSchema,
   VFSContent,
@@ -145,7 +146,10 @@ export const vfs = {
     return await loadContent(id);
   },
 
-  async listDirectory(path: string): Promise<VFSNode[]>
+  async listDirectory(
+    path: string,
+    sortPredicate?: (a: BaseVFSNode, b: BaseVFSNode) => number,
+  ): Promise<VFSNode[]>
   {
     const id = await resolvePathToId(path);
     const node = await loadMetadata(id);
@@ -157,7 +161,10 @@ export const vfs = {
     const children = await Promise.all(
       Object.values(node.children).map((childId) => loadMetadata(childId)),
     );
-    return children.toSorted((a, b) => a.name.localeCompare(b.name));
+
+    return sortPredicate
+      ? children.toSorted(sortPredicate)
+      : children.toSorted((a, b) => a.name.localeCompare(b.name));
   },
 
   async writeFile(

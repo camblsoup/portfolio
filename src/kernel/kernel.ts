@@ -1,7 +1,13 @@
 import type { AppManifest } from "./app-registry/structure.ts";
 import type { FileSystemGrant } from "./process-context.ts";
 import { ProcessManager, ProcessManagerOptions } from "./process-manager.ts";
-import { CanonicalPathSchema, NodeNameSchema, VFSError, VFSNodeType } from "./vfs/structure.ts";
+import {
+  BaseVFSNode,
+  CanonicalPathSchema,
+  NodeNameSchema,
+  VFSError,
+  VFSNodeType,
+} from "./vfs/structure.ts";
 import type { VFSChangeListener } from "./vfs/vfs.ts";
 import { vfs } from "./vfs/vfs.ts";
 import { ManagedWindow, WindowManager } from "./window-manager.ts";
@@ -190,10 +196,13 @@ export class Kernel
     return vfs.subscribe(listener);
   }
 
-  async listDirectory(path: string)
+  async listDirectory(
+    path: string,
+    sortPredicate?: (a: BaseVFSNode, b: BaseVFSNode) => number,
+  )
   {
     this.assertInitialized();
-    return await vfs.listDirectory(path);
+    return await vfs.listDirectory(path, sortPredicate);
   }
 
   async openPath(path: string): Promise<ManagedWindow | undefined>
