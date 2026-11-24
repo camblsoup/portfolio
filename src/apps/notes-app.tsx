@@ -1,4 +1,7 @@
-import { createEffect, createSignal, onMount } from "solid-js";
+import { Crepe, CrepeFeature } from "@milkdown/crepe";
+import { createEffect, createSignal, onCleanup, onMount } from "solid-js";
+import "@milkdown/crepe/theme/common/style.css";
+
 import type { AppComponentProps } from "../kernel/app-registry/structure.ts";
 
 export function NotesApp({ bridge }: AppComponentProps)
@@ -6,6 +9,51 @@ export function NotesApp({ bridge }: AppComponentProps)
   const [contents, setContents] = createSignal("");
   const [filePath, setFilePath] = createSignal<string | undefined>(bridge.openedFile);
   const [loading, setLoading] = createSignal(false);
+  let editorRoot: HTMLDivElement | undefined;
+  let editor: Crepe | undefined;
+  let editorTask = Promise.resolve();
+  let disposed = false;
+
+  const replaceEditorContent = (markdown: string) =>
+  {
+    const task = editorTask.catch(() => undefined).then(async () =>
+    {
+      const previousEditor = editor;
+      editor = undefined;
+      await previousEditor?.destroy();
+      if (disposed || !editorRoot)
+      {
+        return;
+      }
+
+      const nextEditor = new Crepe({
+        root: editorRoot,
+        defaultValue: markdown,
+        features: {
+          [CrepeFeature.Toolbar]: false,
+          [CrepeFeature.BlockEdit]: false,
+          [CrepeFeature.TopBar]: false,
+          [CrepeFeature.Cursor]: false,
+          [CrepeFeature.LinkTooltip]: false,
+          [CrepeFeature.Placeholder]: false,
+        },
+      });
+      nextEditor.on((listener) =>
+      {
+        listener.markdownUpdated((_context, updatedMarkdown) =>
+        {
+          if (!disposed && editor === nextEditor)
+          {
+            setContents(updatedMarkdown);
+          }
+        });
+      });
+      editor = nextEditor;
+      await nextEditor.create();
+    });
+    editorTask = task;
+    return task;
+  };
 
   const writeFile = async (path: string) =>
   {
@@ -57,6 +105,10 @@ export function NotesApp({ bridge }: AppComponentProps)
   {
     setFilePath(undefined);
     setContents("");
+    void replaceEditorContent("").catch((error: unknown) =>
+    {
+      console.error("Unable to reset the note editor.", error);
+    });
   };
 
   createEffect(() =>
@@ -87,32 +139,67 @@ export function NotesApp({ bridge }: AppComponentProps)
 
   onMount(() =>
   {
+
     const initialPath = bridge.openedFile;
     if (!initialPath)
     {
+      void replaceEditorContent("").catch((error: unknown) =>
+      {
+        console.error("Unable to initialize the note editor.", error);
+      });
       return;
     }
 
     setLoading(true);
-    void bridge.fileSystem.readContent(initialPath).then((bytes) =>
+    void (async () =>
     {
-      setContents(new TextDecoder().decode(bytes));
-    }).catch((error: unknown) =>
+      try
+      {
+        const bytes = await bridge.fileSystem.readContent(initialPath);
+        if (!disposed)
+        {
+          setContents(new TextDecoder().decode(bytes));
+        }
+      }
+      catch (error)
+      {
+        console.error(`Unable to open '${initialPath}'.`, error);
+      }
+      finally
+      {
+        if (!disposed)
+        {
+          try
+          {
+            await replaceEditorContent(contents());
+          }
+          catch (error)
+          {
+            console.error("Unable to initialize the note editor.", error);
+          }
+          setLoading(false);
+        }
+      }
+    })();
+  });
+
+  onCleanup(() =>
+  {
+    disposed = true;
+
+    void editorTask.catch(() => undefined).then(async () =>
     {
-      console.error(`Unable to open '${initialPath}'.`, error);
-    }).finally(() =>
-    {
-      setLoading(false);
+      await editor?.destroy();
+      editor = undefined;
     });
   });
 
   return (
-    <textarea
+    <div
       class="notes-editor"
-      aria-label="Text file contents"
-      value={contents()}
-      disabled={loading()}
-      onInput={(event) => setContents(event.currentTarget.value)}
+      aria-label="Markdown note contents"
+      aria-busy={loading()}
+      ref={(element) => editorRoot = element}
     />
   );
 }
