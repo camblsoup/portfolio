@@ -1,14 +1,17 @@
 import { Crepe, CrepeFeature } from "@milkdown/crepe";
-import { createEffect, createSignal, onCleanup, onMount } from "solid-js";
+import { createEffect, createSignal, onCleanup, onMount, Show, untrack } from "solid-js";
 import "@milkdown/crepe/theme/common/style.css";
 
 import type { AppComponentProps } from "../kernel/app-registry/structure.ts";
+
+const isMarkdownFile = (path: string | undefined) => path?.toLowerCase().endsWith(".md") ?? false;
 
 export function NotesApp({ bridge }: AppComponentProps)
 {
   const [contents, setContents] = createSignal("");
   const [filePath, setFilePath] = createSignal<string | undefined>(bridge.openedFile);
   const [loading, setLoading] = createSignal(false);
+  const [ready, setReady] = createSignal(false);
   let editorRoot: HTMLDivElement | undefined;
   let editor: Crepe | undefined;
   let editorTask = Promise.resolve();
@@ -50,6 +53,18 @@ export function NotesApp({ bridge }: AppComponentProps)
       });
       editor = nextEditor;
       await nextEditor.create();
+    });
+    editorTask = task;
+    return task;
+  };
+
+  const destroyEditor = () =>
+  {
+    const task = editorTask.catch(() => undefined).then(async () =>
+    {
+      const previousEditor = editor;
+      editor = undefined;
+      await previousEditor?.destroy();
     });
     editorTask = task;
     return task;
@@ -105,11 +120,34 @@ export function NotesApp({ bridge }: AppComponentProps)
   {
     setFilePath(undefined);
     setContents("");
-    void replaceEditorContent("").catch((error: unknown) =>
-    {
-      console.error("Unable to reset the note editor.", error);
-    });
   };
+
+  createEffect((previousMarkdownMode: boolean | undefined) =>
+  {
+    const isReady = ready();
+    const markdownMode = isMarkdownFile(filePath());
+    if (!isReady)
+    {
+      return previousMarkdownMode;
+    }
+
+    if (markdownMode && previousMarkdownMode !== true)
+    {
+      void replaceEditorContent(untrack(contents)).catch((error: unknown) =>
+      {
+        console.error("Unable to initialize the Markdown editor.", error);
+      });
+    }
+    else if (!markdownMode && previousMarkdownMode === true)
+    {
+      void destroyEditor().catch((error: unknown) =>
+      {
+        console.error("Unable to close the Markdown editor.", error);
+      });
+    }
+
+    return markdownMode;
+  });
 
   createEffect(() =>
   {
@@ -139,14 +177,10 @@ export function NotesApp({ bridge }: AppComponentProps)
 
   onMount(() =>
   {
-
     const initialPath = bridge.openedFile;
     if (!initialPath)
     {
-      void replaceEditorContent("").catch((error: unknown) =>
-      {
-        console.error("Unable to initialize the note editor.", error);
-      });
+      setReady(true);
       return;
     }
 
@@ -169,14 +203,7 @@ export function NotesApp({ bridge }: AppComponentProps)
       {
         if (!disposed)
         {
-          try
-          {
-            await replaceEditorContent(contents());
-          }
-          catch (error)
-          {
-            console.error("Unable to initialize the note editor.", error);
-          }
+          setReady(true);
           setLoading(false);
         }
       }
@@ -195,11 +222,24 @@ export function NotesApp({ bridge }: AppComponentProps)
   });
 
   return (
-    <div
-      class="notes-editor"
-      aria-label="Markdown note contents"
-      aria-busy={loading()}
-      ref={(element) => editorRoot = element}
-    />
+    <Show
+      when={isMarkdownFile(filePath())}
+      fallback={
+        <textarea
+          class="notes-editor notes-plain-editor"
+          aria-label="Text file contents"
+          value={contents()}
+          disabled={loading()}
+          onInput={(event) => setContents(event.currentTarget.value)}
+        />
+      }
+    >
+      <div
+        class="notes-editor"
+        aria-label="Markdown note contents"
+        aria-busy={loading()}
+        ref={(element) => editorRoot = element}
+      />
+    </Show>
   );
 }
