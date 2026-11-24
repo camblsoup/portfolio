@@ -1,3 +1,3 @@
-Icons from:
+Icons adapted from:
 
 - Icon Oven
