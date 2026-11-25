@@ -1,6 +1,7 @@
 import { FileManagerApp } from "../../apps/file-manager-app.tsx";
 import { NotesApp } from "../../apps/notes-app.tsx";
 import { PaintApp } from "../../apps/paint-app.tsx";
+import { ResetSystem } from "../../apps/reset-system.tsx";
 import type { AppManifest } from "./structure.ts";
 
 export const appArr: AppManifest[] = [
@@ -9,7 +10,6 @@ export const appArr: AppManifest[] = [
     name: "Notes",
     icon: "/file-icons/notes.svg",
     binaryPath: "/system/apps/notes.app",
-    desktopPath: "/home/Desktop/Notes.app",
     fileAssociations: [
       { mimeType: "text/plain", actions: ["read", "write"] },
       { mimeType: "text/markdown", actions: ["read", "write"] },
@@ -28,7 +28,6 @@ export const appArr: AppManifest[] = [
     name: "Files",
     icon: "/file-icons/folder.svg",
     binaryPath: "/system/apps/files.app",
-    desktopPath: "/home/Desktop/Files.app",
     directoryHandler: true,
     defaultWindowConfig: {
       width: 560,
@@ -43,7 +42,6 @@ export const appArr: AppManifest[] = [
     name: "Paint",
     icon: "/file-icons/paint.svg",
     binaryPath: "/system/apps/paint.app",
-    desktopPath: "/home/Desktop/Paint.app",
     directoryHandler: true,
     fileAssociations: [
       { mimeType: "image/png", actions: ["read", "write"] },
@@ -55,6 +53,19 @@ export const appArr: AppManifest[] = [
       minHeight: 240,
     },
     component: PaintApp,
+  },
+  {
+    id: "system.reset.camblsoup",
+    name: "Reset System",
+    capabilities: { resetSystem: true },
+    component: ResetSystem,
+    icon: "/file-icons/reset.svg",
+    binaryPath: "/system/apps/reset-system.app",
+    defaultWindowConfig: {
+      width: 640,
+      height: 200,
+    },
+    directoryHandler: true,
   },
   {
     id: "links.github.camblsoup",

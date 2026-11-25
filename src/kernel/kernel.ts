@@ -71,6 +71,7 @@ export class Kernel
       },
       chooseSavePath: (requesterPid, suggestedName) =>
         this.chooseSavePath(requesterPid, suggestedName),
+      resetSystem: () => this.resetSystem(),
     });
     this.processManager.subscribe((processes) =>
     {
@@ -288,6 +289,14 @@ export class Kernel
   terminateProcess(pid: number): boolean
   {
     return this.processManager.stop(pid);
+  }
+
+  private async resetSystem(): Promise<void>
+  {
+    this.assertInitialized();
+    await vfs.reset();
+    this.initialized = false;
+    await this.initialize();
   }
 
   private chooseSavePath(

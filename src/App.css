@@ -584,6 +584,61 @@ textarea {
     background: white;
 }
 
+.taskbar-launcher {
+    position: relative;
+    flex: 0 0 auto;
+    margin-right: 0.5rem;
+}
+
+.taskbar-launcher-button,
+.taskbar-launcher-item {
+    border: 1px solid black;
+    background: white;
+}
+
+.taskbar-launcher-button {
+    padding: 0.25rem 0.5rem;
+}
+
+.taskbar-launcher-menu {
+    position: absolute;
+    z-index: 1000;
+    bottom: calc(100% + 0.25rem);
+    left: 0;
+    display: flex;
+    min-width: 12rem;
+    max-height: min(70vh, 24rem);
+    flex-direction: column;
+    overflow-y: auto;
+    border: 1px solid black;
+    background: white;
+    box-shadow: 0.2rem 0.2rem 0 black;
+}
+
+.taskbar-launcher-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 0;
+    padding: 0.4rem 0.5rem;
+    text-align: left;
+}
+
+.taskbar-launcher-item:hover,
+.taskbar-launcher-item:focus-visible,
+.taskbar-launcher-button:hover,
+.taskbar-launcher-button:focus-visible {
+    outline: 1px solid black;
+    outline-offset: -1px;
+    background: #eee;
+}
+
+.taskbar-launcher-item img {
+    width: 1.25rem;
+    height: 1.25rem;
+    object-fit: contain;
+}
+
 .taskbar-windows {
     min-width: 0;
     flex: 1;

@@ -11,7 +11,7 @@ import { ProcessFileSystem, vfs } from "./vfs/vfs.ts";
 export class ProcessManagerError extends Error
 {
   constructor(
-    public code: "APP_NOT_FOUND" | "PROCESS_TERMINATED",
+    public code: "APP_NOT_FOUND" | "PROCESS_TERMINATED" | "PERMISSION_DENIED",
     message: string,
   )
   {
@@ -35,6 +35,7 @@ export interface ProcessManagerOptions
   grantsForApp?: (manifest: AppManifest) => readonly FileSystemGrant[];
   openPath?: (path: string) => Promise<void>;
   chooseSavePath?: (requesterPid: number, suggestedName: string) => Promise<string | undefined>;
+  resetSystem?: () => Promise<void>;
 }
 
 export type ProcessListener = (processes: readonly ManagedProcess[]) => void;
@@ -57,6 +58,7 @@ export class ProcessManager
     requesterPid: number,
     suggestedName: string,
   ) => Promise<string | undefined>;
+  private readonly resetSystem: () => Promise<void>;
   private readonly processes = new Map<number, ProcessEntry>();
   private readonly menus = new Map<number, ChromeMenuCategory[]>();
   private readonly contextMenus = new Map<number, ChromeMenuItem[]>();
@@ -76,6 +78,10 @@ export class ProcessManager
     this.chooseSavePath = options.chooseSavePath ?? (async () =>
     {
       throw new Error("No save-path service is configured.");
+    });
+    this.resetSystem = options.resetSystem ?? (async () =>
+    {
+      throw new Error("No system reset service is configured.");
     });
   }
 
@@ -168,6 +174,23 @@ export class ProcessManager
         assertActive();
         this.contextMenus.set(pid, items);
         this.notifyContextMenu(pid);
+      },
+      close: () =>
+      {
+        assertActive();
+        this.stop(pid);
+      },
+      resetSystem: async () =>
+      {
+        assertActive();
+        if (!manifest.capabilities?.resetSystem)
+        {
+          throw new ProcessManagerError(
+            "PERMISSION_DENIED",
+            `App '${appId}' is not permitted to reset the system.`,
+          );
+        }
+        await this.resetSystem();
       },
     });
     const process: ManagedProcess = Object.freeze({

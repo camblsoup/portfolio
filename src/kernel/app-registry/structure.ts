@@ -33,6 +33,8 @@ export interface AppBridge
   chooseSavePath: (suggestedName: string) => Promise<string | undefined>;
   setMenus: (menus: ChromeMenuCategory[]) => void;
   setContextMenu: (items: ChromeMenuItem[]) => void;
+  close: () => void;
+  resetSystem: () => Promise<void>;
 }
 
 export interface AppComponentProps
@@ -67,6 +69,10 @@ export interface AppManifest
 
   constraints?: {
     singleton?: boolean;
+  };
+
+  capabilities?: {
+    resetSystem?: boolean;
   };
 
   component?: Component<AppComponentProps>;

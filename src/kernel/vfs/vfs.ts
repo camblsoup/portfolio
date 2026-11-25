@@ -31,7 +31,7 @@ export interface ProcessFileSystem
   listDirectory(path: string): Promise<VFSNode[]>;
   writeFile(path: string, content: VFSContent, mimeType?: string): Promise<VFSNode>;
   createDirectory(path: string): Promise<VFSNode>;
-  delete(path: string): Promise<void | null>;
+  delete(path: string, overrideRoot?: boolean): Promise<void | null>;
   move(sourcePath: string, destinationPath: string): Promise<VFSNode>;
   move(sourcePath: string, destinationPath: string): Promise<VFSNode>;
 }
@@ -41,6 +41,20 @@ export const vfs = {
   {
     changeListeners.add(listener);
     return () => changeListeners.delete(listener);
+  },
+
+  async reset(): Promise<void>
+  {
+    const db = await dbSingleton;
+    const tx = db.transaction(["inodes", "content"], "readwrite");
+    tx.objectStore("inodes").clear();
+    tx.objectStore("content").clear();
+    await tx.done;
+
+    inodeCache.clear();
+    contentCache.clear();
+    await this.ensureRoot();
+    notifyChange("/");
   },
 
   async ensureRoot(): Promise<VFSDirectoryNode>
@@ -119,10 +133,10 @@ export const vfs = {
         await assertWritePermissions(process, normalizedPath, false, additionalGrants());
         return await vfs.createDirectory(normalizedPath);
       },
-      delete: async (path) =>
+      delete: async (path, overrideRoot?: boolean) =>
       {
         await assertWritePermissions(process, path, false, additionalGrants());
-        return await vfs.delete(path);
+        return await vfs.delete(path, overrideRoot);
       },
       move: async (sourcePath, destinationPath) =>
       {
@@ -449,10 +463,10 @@ export const vfs = {
     return movedNode;
   },
 
-  async delete(path: string)
+  async delete(path: string, overrideRoot?: boolean)
   {
     const id = await resolvePathToId(path);
-    if (id === "root")
+    if (id === "root" && !overrideRoot)
     {
       throw new VFSError("EEXIST", "Cannot delete the root directory.");
     }

@@ -192,6 +192,39 @@ describe("Kernel process and window lifecycle", () =>
     expect(restartedKernel.getSystemLocale()).toBe("de-DE");
   });
 
+  it("allows only authorized apps to reset and reinitialize the file system", async () =>
+  {
+    const resetApp: AppManifest = {
+      ...testApp,
+      id: "test.reset",
+      name: "Reset",
+      capabilities: { resetSystem: true },
+    };
+    const kernel = new Kernel({
+      registry: new Map([[testApp.id, testApp], [resetApp.id, resetApp]]),
+    });
+    await kernel.initialize();
+
+    const ordinaryProcess = kernel.processManager.start(testApp.id);
+    await expect(ordinaryProcess.bridge.resetSystem()).rejects.toMatchObject({
+      code: "PERMISSION_DENIED",
+    });
+
+    await vfs.writeFile(
+      `${DESKTOP_DIRECTORY}/changed.txt`,
+      new TextEncoder().encode("modified"),
+      "text/plain",
+    );
+    const resetProcess = kernel.processManager.start(resetApp.id);
+    await resetProcess.bridge.resetSystem();
+
+    await expect(vfs.readMetadata(`${DESKTOP_DIRECTORY}/changed.txt`))
+      .rejects.toThrow("File not found");
+    await expect(vfs.readMetadata(testApp.binaryPath!)).resolves.toMatchObject({
+      name: "test.app",
+    });
+  });
+
   it("opens directories in a scoped file manager and lets it dispatch files", async () =>
   {
     const registry = new Map([
@@ -355,6 +388,18 @@ describe("Kernel process and window lifecycle", () =>
 
     expect(kernel.closeWindow(window.id)).toBe(true);
     expect(kernel.processManager.get(window.process.pid)).toBeUndefined();
+  });
+
+  it("lets an app close itself through its bridge", async () =>
+  {
+    const kernel = new Kernel({ registry: new Map([[testApp.id, testApp]]) });
+    await kernel.initialize();
+
+    const window = kernel.launchApp(testApp.id)!;
+    window.process.bridge.close();
+
+    expect(kernel.processManager.get(window.process.pid)).toBeUndefined();
+    expect(kernel.windowManager.getWindows()).toHaveLength(0);
   });
 
   it("rejects attempts to launch an unregistered app", () =>

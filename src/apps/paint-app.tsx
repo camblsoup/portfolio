@@ -47,17 +47,30 @@ export function PaintApp({ bridge }: AppComponentProps)
   const [filledShape, setFilledShape] = createSignal(false);
   const [isDrawing, setIsDrawing] = createSignal(false);
 
-  const brushCursor = () => {
+  const brushCursor = () =>
+  {
     const size = brushSize();
     const cursorSize = Math.max(8, Math.ceil(size) + 2);
     const center = cursorSize / 2;
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${cursorSize}" height="${cursorSize}" viewBox="0 0 ${cursorSize} ${cursorSize}"><circle cx="${center}" cy="${center}" r="${size / 2}" fill="${color()}" stroke="#000000" stroke-width="1"/></svg>`;
-    return `url("data:image/svg+xml,${encodeURIComponent(svg)}") ${Math.floor(center)} ${Math.floor(center)}, crosshair`;
+    const svg =
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${cursorSize}" height="${cursorSize}" viewBox="0 0 ${cursorSize} ${cursorSize}"><circle cx="${center}" cy="${center}" r="${
+        size / 2
+      }" fill="${color()}" stroke="#000000" stroke-width="1"/></svg>`;
+    return `url("data:image/svg+xml,${encodeURIComponent(svg)}") ${Math.floor(center)} ${
+      Math.floor(center)
+    }, crosshair`;
   };
 
-  const toolCursor = () => {
-    if (tool() === "brush") return brushCursor();
-    if (tool() === "shape") return "crosshair";
+  const toolCursor = () =>
+  {
+    if (tool() === "brush")
+    {
+      return brushCursor();
+    }
+    if (tool() === "shape")
+    {
+      return "crosshair";
+    }
 
     const icon = tool() === "eraser" ? "eraser" : "fill";
     return `url("/paint-icons/${icon}.svg") 12 12, crosshair`;
