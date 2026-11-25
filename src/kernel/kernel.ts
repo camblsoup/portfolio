@@ -18,7 +18,7 @@ export const DESKTOP_DIRECTORY = "/home/Desktop";
 // Stored as a UTF-8 IANA zone ID; browser APIs cannot consume Linux TZif files directly.
 export const LOCAL_TIME_PATH = "/etc/localtime";
 export const LOCALE_CONFIG_PATH = "/etc/locale.conf";
-const SYSTEM_FILES_VERSION = 3;
+const SYSTEM_FILES_VERSION = 4;
 const SYSTEM_FILES = import.meta.glob<string>("../system-files/**/*", {
   eager: true,
   query: "?inline",
