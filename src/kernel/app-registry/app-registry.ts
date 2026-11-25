@@ -45,6 +45,9 @@ export const appArr: AppManifest[] = [
     binaryPath: "/system/apps/paint.app",
     desktopPath: "/home/Desktop/Paint.app",
     directoryHandler: true,
+    fileAssociations: [
+      { mimeType: "image/png", actions: ["read", "write"] },
+    ],
     defaultWindowConfig: {
       width: 640,
       height: 400,
