@@ -628,8 +628,6 @@ textarea {
 .taskbar-launcher-item:focus-visible,
 .taskbar-launcher-button:hover,
 .taskbar-launcher-button:focus-visible {
-    outline: 1px solid black;
-    outline-offset: -1px;
     background: #eee;
 }
 
