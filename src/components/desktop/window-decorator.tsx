@@ -62,8 +62,8 @@ export function WindowDecorator(props: WindowDecoratorProps)
     const { x, y, width, height } = currentWindow();
     const onMove = (moveEvent: PointerEvent) =>
     {
-      const deltaX = moveEvent.clientX - startX;
-      const deltaY = moveEvent.clientY - startY;
+      const deltaX = Math.max(Math.min(moveEvent.clientX, window.innerWidth), 0) - startX;
+      const deltaY = Math.max(Math.min(moveEvent.clientY, window.innerHeight - 49), 0) - startY;
       windowManager.updateFrame(
         props.windowId,
         mode === "move"
