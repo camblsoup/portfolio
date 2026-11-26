@@ -1,0 +1,152 @@
+.color-picker-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid black;
+  padding: 0.25rem 0.5rem;
+  color: inherit;
+  background: white;
+  cursor: pointer;
+}
+
+.color-picker-trigger:hover,
+.color-picker-trigger:focus-visible {
+  background: #eee;
+}
+
+.color-picker-swatch {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 1px solid black;
+}
+
+.color-picker-popup,
+.color-picker-dialog {
+  z-index: 2000;
+  width: 16rem;
+  border: 1px solid black;
+  padding: 0.75rem;
+  color: black;
+  background: white;
+  box-shadow: 0.2rem 0.2rem 0 black;
+}
+
+.color-picker-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.color-picker-area {
+  position: relative;
+  height: 10rem;
+  touch-action: none;
+}
+
+.color-picker-area-background {
+  position: absolute;
+  inset: 0;
+  cursor: crosshair;
+}
+
+.color-picker-area-thumb {
+  width: 0.875rem;
+  height: 0.875rem;
+  border: 2px solid white;
+  border-radius: 50%;
+  background: var(--kb-color-current);
+  box-shadow: 0 0 0 1px black;
+  cursor: crosshair;
+}
+
+.color-picker-hue {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.color-picker-hue-slider {
+  position: relative;
+  display: flex;
+  height: 1.25rem;
+  align-items: center;
+}
+
+.color-picker-hue-track {
+  position: relative;
+  width: 100%;
+  height: 0.75rem;
+  border: 1px solid black;
+}
+
+.color-picker-hue-thumb {
+  display: block;
+  width: 0.875rem;
+  height: 1.25rem;
+  border: 1px solid black;
+  background: white;
+  box-shadow: 0 0 0 1px white;
+}
+
+.color-picker-hex {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.color-picker-hex input {
+  min-width: 0;
+  box-sizing: border-box;
+  border: 1px solid black;
+  padding: 0.25rem;
+  color: inherit;
+  background: white;
+}
+
+.color-picker-overlay {
+  position: fixed;
+  z-index: 1999;
+  inset: 0;
+  background: rgb(0 0 0 / 35%);
+}
+
+.color-picker-dialog {
+  position: fixed;
+  z-index: 2000;
+  top: 50%;
+  left: 50%;
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  transform: translate(-50%, -50%);
+}
+
+.color-picker-dialog-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.color-picker-dialog-heading h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.color-picker-close {
+  min-width: 2rem;
+  min-height: 2rem;
+  border: 1px solid black;
+  background: white;
+  cursor: pointer;
+}
+
+@media (max-width: 20rem) {
+  .color-picker-popup,
+  .color-picker-dialog {
+    box-sizing: border-box;
+    width: calc(100vw - 2rem);
+  }
+}

@@ -1,4 +1,5 @@
 import { createEffect, createSignal, onMount, Show } from "solid-js";
+import { ColorPicker } from "../components/base/color-picker";
 import { AppComponentProps } from "../kernel/app-registry/structure";
 
 function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob>
@@ -623,12 +624,7 @@ export function PaintApp({ bridge }: AppComponentProps)
         </Show>
         <label class="paint-control">
           <span>Color</span>
-          <input
-            aria-label="Brush color"
-            type="color"
-            value={color()}
-            onInput={(e) => setColor(e.currentTarget.value)}
-          />
+          <ColorPicker value={color()} onChange={(v) => setColor(v)} />
         </label>
         <label class="paint-control paint-brush-control">
           <span>Brush width</span>
