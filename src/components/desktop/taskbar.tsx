@@ -61,9 +61,14 @@ export function Taskbar()
           Apps
         </button>
         <Show when={launcherOpen()}>
-          <div id="taskbar-launcher-menu" class="taskbar-launcher-menu" role="menu" aria-label="Applications">
+          <div
+            id="taskbar-launcher-menu"
+            class="taskbar-launcher-menu"
+            role="menu"
+            aria-label="Applications"
+          >
             <For each={launchableApps}>
-              {(manifest) =>
+              {(manifest) => (
                 <button
                   class="taskbar-launcher-item"
                   type="button"
@@ -77,7 +82,7 @@ export function Taskbar()
                   <img src={manifest.icon} alt="" />
                   <span>{manifest.name}</span>
                 </button>
-              }
+              )}
             </For>
           </div>
         </Show>
